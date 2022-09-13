@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option go_package = "github.com/trendyol/smurfs/protos";
+
+message Empty {}
+
+message LogRequest {
+  string msg = 1;
+}
+
+service LogService {
+  rpc Info (stream LogRequest) returns (Empty) {}
+  rpc Warn (stream LogRequest) returns (Empty) {}
+  rpc Error (stream LogRequest) returns (Empty) {}
+}
+
+message TokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  string rpt_token = 3;
+}
+
+message UserInfo {
+  string username = 1;
+  string email = 2;
+  string team = 3;
+}
+
+service AuthService {
+  rpc GetToken (Empty) returns (TokenResponse) {}
+  rpc GetUserInfo (Empty) returns (UserInfo) {}
+}
+
+message SetMetadataStorageRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message GetMetadataStorageRequest {
+  string key = 1;
+}
+
+message MetadataStorageResponse {
+  string value = 1;
+}
+
+service MetadataStorageService {
+  rpc Get (GetMetadataStorageRequest) returns (MetadataStorageResponse) {}
+  rpc Set (SetMetadataStorageRequest) returns (Empty) {}
+}
