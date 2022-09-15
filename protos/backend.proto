@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option go_package = "github.com/trendyol/smurfs/protos";
+
+message Command {
+  string name = 1;
+  string description = 2;
+  string usage = 3;
+  string example = 4;
+  repeated string aliases = 5;
+  repeated CommandArgument arguments = 6;
+  CommandVersion version = 7;
+}
+
+message CommandArgument {
+  string name = 1;
+  string description = 2;
+  bool required = 3;
+  bool repeated = 4;
+}
+
+message CommandVersion {
+  string version = 1;
+  string sha = 2;
+  string url = 3;
+}
+
+message CommandRequest {
+  string parent = 1;
+  string arch = 2;
+  string os = 3;
+}
+
+message CommandResponse {
+  repeated Command commands = 1;
+}
+
+service CommandService {
+  rpc GetCommands(CommandRequest) returns (CommandResponse) {}
+}

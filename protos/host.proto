@@ -1,17 +1,17 @@
 syntax = "proto3";
 
-option go_package = "github.com/trendyol/smurfs/protos";
+import "google/protobuf/empty.proto";
 
-message Empty {}
+option go_package = "github.com/trendyol/smurfs/protos";
 
 message LogRequest {
   string msg = 1;
 }
 
 service LogService {
-  rpc Info (stream LogRequest) returns (Empty) {}
-  rpc Warn (stream LogRequest) returns (Empty) {}
-  rpc Error (stream LogRequest) returns (Empty) {}
+  rpc Info (stream LogRequest) returns (google.protobuf.Empty) {}
+  rpc Warn (stream LogRequest) returns (google.protobuf.Empty) {}
+  rpc Error (stream LogRequest) returns (google.protobuf.Empty) {}
 }
 
 message TokenResponse {
@@ -27,8 +27,8 @@ message UserInfo {
 }
 
 service AuthService {
-  rpc GetToken (Empty) returns (TokenResponse) {}
-  rpc GetUserInfo (Empty) returns (UserInfo) {}
+  rpc GetToken (google.protobuf.Empty) returns (TokenResponse) {}
+  rpc GetUserInfo (google.protobuf.Empty) returns (UserInfo) {}
 }
 
 message SetMetadataStorageRequest {
@@ -46,5 +46,5 @@ message MetadataStorageResponse {
 
 service MetadataStorageService {
   rpc Get (GetMetadataStorageRequest) returns (MetadataStorageResponse) {}
-  rpc Set (SetMetadataStorageRequest) returns (Empty) {}
+  rpc Set (SetMetadataStorageRequest) returns (google.protobuf.Empty) {}
 }
