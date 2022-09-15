@@ -8,15 +8,16 @@ message Command {
   string usage = 3;
   string example = 4;
   repeated string aliases = 5;
-  repeated CommandArgument arguments = 6;
+  repeated CommandFlag flags = 6;
   CommandVersion version = 7;
 }
 
-message CommandArgument {
+message CommandFlag {
   string name = 1;
   string description = 2;
   bool required = 3;
   bool repeated = 4;
+  string short = 5;
 }
 
 message CommandVersion {
