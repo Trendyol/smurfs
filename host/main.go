@@ -1,75 +1,62 @@
 package main
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/trendyol/smurfs/host/protos"
+	"github.com/trendyol/smurfs/host/pkg/environment"
+	installation "github.com/trendyol/smurfs/host/pkg/install"
+	"github.com/trendyol/smurfs/host/pkg/plugin"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 )
 
-var rootCmd = &cobra.Command{
-	Use: "ty",
-}
+func HomeDir() string {
+	if runtime.GOOS == "windows" {
 
-var commandManifests = []*protos.Command{
-	{
-		Name:        "login",
-		Description: "to login with LDAP credentials",
-		Flags: []*protos.CommandFlag {
-			{
-				Name: "email",
-				Required: true,
-				Repeated: false,
-				Description: "User email",
-			},
-			{
-				Name: "password",
-				Required: true,
-				Repeated: false,
-				Description: "User password",
-			},
-		},
-	},
-	{
-		Name:        "logout",
-		Description: "to logout from CLI",
-		Flags: []*protos.CommandFlag{
-			{
-				Name: "email",
-				Required: false,
-				Repeated: false,
-				Description: "User email",
-			},
-		},
-
-	},
-}
-
-func main() {
-	for _, command := range commandManifests {
-		subCommand := &cobra.Command{
-			Use: command.Name,
-			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println("Running the command " + command.Name)
-				for i := range args {
-					fmt.Println(i)
-				}
-			},
-			Short:   command.Description,
-			Example: command.Usage,
+		// First prefer the HOME environmental variable
+		if home := os.Getenv("HOME"); len(home) > 0 {
+			if _, err := os.Stat(home); err == nil {
+				return home
+			}
 		}
-		rootCmd.AddCommand(subCommand)
-		for _, flag := range command.Flags {
-			subCommand.Flags().StringP(flag.Name, flag.Short, "", flag.Description)
-			if flag.Required {
-				subCommand.MarkFlagRequired(flag.Name)
+		if homeDrive, homePath := os.Getenv("HOMEDRIVE"), os.Getenv("HOMEPATH"); len(homeDrive) > 0 && len(homePath) > 0 {
+			homeDir := homeDrive + homePath
+			if _, err := os.Stat(homeDir); err == nil {
+				return homeDir
+			}
+		}
+		if userProfile := os.Getenv("USERPROFILE"); len(userProfile) > 0 {
+			if _, err := os.Stat(userProfile); err == nil {
+				return userProfile
 			}
 		}
 	}
+	return os.Getenv("HOME")
+}
 
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+func main() {
+	base := filepath.Join(HomeDir(), ".ty")
+	paths := environment.NewPaths(base)
+	p := plugin.Plugin{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Plugin",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: plugin.PluginSpec{
+			Version: "v0.0.1",
+			Platform: plugin.Platform{
+				URI:    "https://github.com/sysdiglabs/kube-policy-advisor/releases/download/v1.0.2/kube-policy-advisor_v1.0.2_darwin_amd64.tar.gz",
+				Sha256: "043e6dd1608eae2b2845db41052fd7876c986fd82392166c176d119554cafbb4",
+				Bin:    "kubectl-advise-policy",
+			},
+		},
+	}
+	err := installation.Install(paths, p, installation.InstallOpts{})
+	if err != nil {
+		log.Fatalf("failed to install plugin: %v", err)
 	}
 
 	//lis, err := net.Listen("tcp", fmt.Sprintf("localhost:8080"))

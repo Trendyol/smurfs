@@ -6,6 +6,8 @@ import (
 	"log"
 )
 
+var _ = protos.LogServiceServer(&logServiceImpl{})
+
 type logServiceImpl struct {
 	protos.UnimplementedLogServiceServer
 }
