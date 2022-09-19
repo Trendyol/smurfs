@@ -1,18 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package installation
+package install
 
 import (
 	"github.com/trendyol/smurfs/host/pkg/download"
@@ -30,6 +16,20 @@ import (
 	"k8s.io/klog/v2"
 )
 
+type Installer interface {
+	InstallPlugin(plugin plugin.Plugin, opts InstallOpts) error
+}
+
+type installer struct {
+	paths environment.Paths
+}
+
+func New(paths environment.Paths) *installer {
+	return &installer{
+		paths: paths,
+	}
+}
+
 // InstallOpts specifies options for plugin installation operation.
 type InstallOpts struct {
 	ArchiveFileOverride string
@@ -37,7 +37,7 @@ type InstallOpts struct {
 
 type installOperation struct {
 	pluginName string
-	platform   plugin.Platform
+	platform   plugin.Runnable
 
 	installDir string
 	binDir     string
@@ -124,7 +124,7 @@ func install(op installOperation, opts InstallOpts) error {
 	return errors.Wrap(err, "failed to link installed plugin")
 }
 
-func applyDefaults(platform *plugin.Platform) {
+func applyDefaults(platform *plugin.Runnable) {
 	if platform.Files == nil {
 		platform.Files = []plugin.FileOperation{{From: "*", To: "."}}
 		klog.V(4).Infof("file operation not specified, assuming %v", platform.Files)

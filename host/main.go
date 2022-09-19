@@ -47,7 +47,7 @@ func main() {
 		},
 		Spec: plugin.PluginSpec{
 			Version: "v0.0.1",
-			Platform: plugin.Platform{
+			Platform: plugin.Runnable{
 				URI:    "https://github.com/sysdiglabs/kube-policy-advisor/releases/download/v1.0.2/kube-policy-advisor_v1.0.2_darwin_amd64.tar.gz",
 				Sha256: "043e6dd1608eae2b2845db41052fd7876c986fd82392166c176d119554cafbb4",
 				Bin:    "kubectl-advise-policy",

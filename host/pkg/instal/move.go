@@ -1,4 +1,4 @@
-package installation
+package install
 
 import (
 	"github.com/trendyol/smurfs/host/pkg/plugin"

@@ -4,36 +4,35 @@ import (
 	"github.com/trendyol/smurfs/host/pkg/plugin"
 	"github.com/trendyol/smurfs/host/pkg/util"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/yaml"
 )
 
 // Store saves the given receipt at the destination.
 // The caller has to ensure that the destination directory exists.
 func Store(receipt plugin.Receipt, dest string) error {
-	yamlBytes, err := yaml.Marshal(receipt)
+	yamlBytes, err := util.EncodeToYAML(receipt)
 	if err != nil {
-		return errors.Wrapf(err, "convert to yaml")
+		return errors.Wrapf(err, "could not convert to yaml")
 	}
 
 	err = os.WriteFile(dest, yamlBytes, 0o644)
-	return errors.Wrapf(err, "write plugin receipt %q", dest)
+	return errors.Wrapf(err, "could not write plugin receipt %q", dest)
 }
 
 // Load reads the plugin receipt at the specified destination.
 // If not found, it returns os.IsNotExist error.
 func Load(path string) (plugin.Receipt, error) {
 	var receipt plugin.Receipt
-	err := util.ReadFromFile(path, &receipt)
+	err := util.ReadYAMLFromFile(path, &receipt)
 	return receipt, err
 }
 
 // New returns a new receipt with the given plugin
-func New(p plugin.Plugin, timestamp metav1.Time) plugin.Receipt {
-	p.CreationTimestamp = timestamp
+func New(p plugin.Plugin) plugin.Receipt {
 	return plugin.Receipt{
-		Plugin: p,
+		Plugin:      p,
+		InstalledAt: time.Now(),
 	}
 }

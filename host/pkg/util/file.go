@@ -7,14 +7,18 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// ReadFromFile loads a file from the FS into the provided object.
-func ReadFromFile(path string, as interface{}) error {
+// ReadYAMLFromFile loads a file from the FS into the provided object.
+func ReadYAMLFromFile(path string, as interface{}) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	err = DecodeYAML(f, &as)
 	return errors.Wrapf(err, "failed to parse yaml file %q", path)
+}
+
+func EncodeToYAML(obj interface{}) ([]byte, error) {
+	return yaml.Marshal(obj)
 }
 
 // DecodeYAML tries to decode file as YAML format

@@ -15,9 +15,10 @@ message Command {
 message CommandFlag {
   string name = 1;
   string description = 2;
-  bool required = 3;
-  bool repeated = 4;
-  string short = 5;
+  string defaultValue = 3;
+  bool required = 4;
+  bool repeated = 5;
+  string short = 6;
 }
 
 message CommandVersion {
