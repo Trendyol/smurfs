@@ -3,9 +3,9 @@ package cli
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/trendyol/smurfs/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
 	"github.com/trendyol/smurfs/go/host/pkg/process"
-	"github.com/trendyol/smurfs/go/host/protos"
+	"github.com/trendyol/smurfs/go/protos"
 )
 
 // CommandWrapper is responsible for wrapping the command manifest to cobra command
@@ -34,8 +34,7 @@ func (w *wrapper) Wrap(cmdManifest *protos.Command) func(cmd *cobra.Command, arg
 				"args":    args,
 			})
 
-		w.pluginManager.
-			logger.Debugf("Running command: %s", cmdManifest.Name)
+		logger.Debugf("Running command: %s", cmdManifest.Name)
 
 		if err := w.exec.Run(ctx, cmdManifest.Name, args...); err != nil {
 			logger.Errorf("Error running command: %s", cmdManifest.Name)
