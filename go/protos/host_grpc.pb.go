@@ -19,9 +19,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LogServiceClient interface {
+	Debug(ctx context.Context, opts ...grpc.CallOption) (LogService_DebugClient, error)
 	Info(ctx context.Context, opts ...grpc.CallOption) (LogService_InfoClient, error)
 	Warn(ctx context.Context, opts ...grpc.CallOption) (LogService_WarnClient, error)
 	Error(ctx context.Context, opts ...grpc.CallOption) (LogService_ErrorClient, error)
+	Fatal(ctx context.Context, opts ...grpc.CallOption) (LogService_FatalClient, error)
 }
 
 type logServiceClient struct {
@@ -32,8 +34,42 @@ func NewLogServiceClient(cc grpc.ClientConnInterface) LogServiceClient {
 	return &logServiceClient{cc}
 }
 
+func (c *logServiceClient) Debug(ctx context.Context, opts ...grpc.CallOption) (LogService_DebugClient, error) {
+	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[0], "/LogService/Debug", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &logServiceDebugClient{stream}
+	return x, nil
+}
+
+type LogService_DebugClient interface {
+	Send(*LogRequest) error
+	CloseAndRecv() (*emptypb.Empty, error)
+	grpc.ClientStream
+}
+
+type logServiceDebugClient struct {
+	grpc.ClientStream
+}
+
+func (x *logServiceDebugClient) Send(m *LogRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *logServiceDebugClient) CloseAndRecv() (*emptypb.Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(emptypb.Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *logServiceClient) Info(ctx context.Context, opts ...grpc.CallOption) (LogService_InfoClient, error) {
-	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[0], "/LogService/Info", opts...)
+	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[1], "/LogService/Info", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +103,7 @@ func (x *logServiceInfoClient) CloseAndRecv() (*emptypb.Empty, error) {
 }
 
 func (c *logServiceClient) Warn(ctx context.Context, opts ...grpc.CallOption) (LogService_WarnClient, error) {
-	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[1], "/LogService/Warn", opts...)
+	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[2], "/LogService/Warn", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +137,7 @@ func (x *logServiceWarnClient) CloseAndRecv() (*emptypb.Empty, error) {
 }
 
 func (c *logServiceClient) Error(ctx context.Context, opts ...grpc.CallOption) (LogService_ErrorClient, error) {
-	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[2], "/LogService/Error", opts...)
+	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[3], "/LogService/Error", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,13 +170,49 @@ func (x *logServiceErrorClient) CloseAndRecv() (*emptypb.Empty, error) {
 	return m, nil
 }
 
+func (c *logServiceClient) Fatal(ctx context.Context, opts ...grpc.CallOption) (LogService_FatalClient, error) {
+	stream, err := c.cc.NewStream(ctx, &LogService_ServiceDesc.Streams[4], "/LogService/Fatal", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &logServiceFatalClient{stream}
+	return x, nil
+}
+
+type LogService_FatalClient interface {
+	Send(*LogRequest) error
+	CloseAndRecv() (*emptypb.Empty, error)
+	grpc.ClientStream
+}
+
+type logServiceFatalClient struct {
+	grpc.ClientStream
+}
+
+func (x *logServiceFatalClient) Send(m *LogRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *logServiceFatalClient) CloseAndRecv() (*emptypb.Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(emptypb.Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // LogServiceServer is the server API for LogService service.
 // All implementations must embed UnimplementedLogServiceServer
 // for forward compatibility
 type LogServiceServer interface {
+	Debug(LogService_DebugServer) error
 	Info(LogService_InfoServer) error
 	Warn(LogService_WarnServer) error
 	Error(LogService_ErrorServer) error
+	Fatal(LogService_FatalServer) error
 	mustEmbedUnimplementedLogServiceServer()
 }
 
@@ -148,6 +220,9 @@ type LogServiceServer interface {
 type UnimplementedLogServiceServer struct {
 }
 
+func (UnimplementedLogServiceServer) Debug(LogService_DebugServer) error {
+	return status.Errorf(codes.Unimplemented, "method Debug not implemented")
+}
 func (UnimplementedLogServiceServer) Info(LogService_InfoServer) error {
 	return status.Errorf(codes.Unimplemented, "method Info not implemented")
 }
@@ -156,6 +231,9 @@ func (UnimplementedLogServiceServer) Warn(LogService_WarnServer) error {
 }
 func (UnimplementedLogServiceServer) Error(LogService_ErrorServer) error {
 	return status.Errorf(codes.Unimplemented, "method Error not implemented")
+}
+func (UnimplementedLogServiceServer) Fatal(LogService_FatalServer) error {
+	return status.Errorf(codes.Unimplemented, "method Fatal not implemented")
 }
 func (UnimplementedLogServiceServer) mustEmbedUnimplementedLogServiceServer() {}
 
@@ -168,6 +246,32 @@ type UnsafeLogServiceServer interface {
 
 func RegisterLogServiceServer(s grpc.ServiceRegistrar, srv LogServiceServer) {
 	s.RegisterService(&LogService_ServiceDesc, srv)
+}
+
+func _LogService_Debug_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(LogServiceServer).Debug(&logServiceDebugServer{stream})
+}
+
+type LogService_DebugServer interface {
+	SendAndClose(*emptypb.Empty) error
+	Recv() (*LogRequest, error)
+	grpc.ServerStream
+}
+
+type logServiceDebugServer struct {
+	grpc.ServerStream
+}
+
+func (x *logServiceDebugServer) SendAndClose(m *emptypb.Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *logServiceDebugServer) Recv() (*LogRequest, error) {
+	m := new(LogRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func _LogService_Info_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -248,6 +352,32 @@ func (x *logServiceErrorServer) Recv() (*LogRequest, error) {
 	return m, nil
 }
 
+func _LogService_Fatal_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(LogServiceServer).Fatal(&logServiceFatalServer{stream})
+}
+
+type LogService_FatalServer interface {
+	SendAndClose(*emptypb.Empty) error
+	Recv() (*LogRequest, error)
+	grpc.ServerStream
+}
+
+type logServiceFatalServer struct {
+	grpc.ServerStream
+}
+
+func (x *logServiceFatalServer) SendAndClose(m *emptypb.Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *logServiceFatalServer) Recv() (*LogRequest, error) {
+	m := new(LogRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // LogService_ServiceDesc is the grpc.ServiceDesc for LogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -256,6 +386,11 @@ var LogService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*LogServiceServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Debug",
+			Handler:       _LogService_Debug_Handler,
+			ClientStreams: true,
+		},
 		{
 			StreamName:    "Info",
 			Handler:       _LogService_Info_Handler,
@@ -269,6 +404,11 @@ var LogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Error",
 			Handler:       _LogService_Error_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "Fatal",
+			Handler:       _LogService_Fatal_Handler,
 			ClientStreams: true,
 		},
 	},

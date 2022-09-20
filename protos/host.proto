@@ -2,16 +2,18 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/trendyol/smurfs/protos";
+option go_package = "github.com/trendyol/smurfs/go/protos";
 
 message LogRequest {
   string msg = 1;
 }
 
 service LogService {
+  rpc Debug (stream LogRequest) returns (google.protobuf.Empty) {}
   rpc Info (stream LogRequest) returns (google.protobuf.Empty) {}
   rpc Warn (stream LogRequest) returns (google.protobuf.Empty) {}
   rpc Error (stream LogRequest) returns (google.protobuf.Empty) {}
+  rpc Fatal (stream LogRequest) returns (google.protobuf.Empty) {}
 }
 
 message TokenResponse {
