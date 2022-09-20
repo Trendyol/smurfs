@@ -8,7 +8,7 @@ import (
 	"github.com/trendyol/smurfs/host/pkg/consts"
 	"github.com/trendyol/smurfs/host/pkg/download"
 	"github.com/trendyol/smurfs/host/pkg/environment"
-	"github.com/trendyol/smurfs/host/pkg/instal/receipt"
+	"github.com/trendyol/smurfs/host/pkg/install/receipt"
 	"os"
 	"path"
 	"path/filepath"
