@@ -14,3 +14,8 @@ require (
 	k8s.io/klog/v2 v2.70.1
 	sigs.k8s.io/yaml v1.2.0
 )
+
+require (
+	github.com/sirupsen/logrus v1.9.0 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+)

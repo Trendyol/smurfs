@@ -1,8 +1,8 @@
 package install
 
 import (
-	"github.com/trendyol/smurfs/host/pkg/plugin"
-	"github.com/trendyol/smurfs/host/pkg/util/pathutil"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/pkg/util/pathutil"
 	"io"
 	"os"
 	"path/filepath"

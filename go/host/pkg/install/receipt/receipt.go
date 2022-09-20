@@ -1,10 +1,10 @@
 package receipt
 
 import (
-	"github.com/trendyol/smurfs/host/pkg/plugin"
-	"github.com/trendyol/smurfs/host/pkg/util"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
-	"time"
 
 	"github.com/pkg/errors"
 )
@@ -30,9 +30,9 @@ func Load(path string) (plugin.Receipt, error) {
 }
 
 // New returns a new receipt with the given plugin
-func New(p plugin.Plugin) plugin.Receipt {
+func New(p plugin.Plugin, time metav1.Time) plugin.Receipt {
 	return plugin.Receipt{
 		Plugin:      p,
-		InstalledAt: time.Now(),
+		InstalledAt: time.Time,
 	}
 }

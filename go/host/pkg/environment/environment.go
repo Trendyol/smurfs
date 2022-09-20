@@ -1,7 +1,7 @@
 package environment
 
 import (
-	"github.com/trendyol/smurfs/host/pkg/consts"
+	"github.com/trendyol/smurfs/go/host/pkg/consts"
 	"os"
 	"path/filepath"
 

@@ -3,8 +3,8 @@ package cli
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/trendyol/smurfs/host/pkg/process"
-	"github.com/trendyol/smurfs/host/protos"
+	"github.com/trendyol/smurfs/go/host/pkg/process"
+	"github.com/trendyol/smurfs/go/host/protos"
 )
 
 // CommandWrapper is responsible for wrapping the command manifest to cobra command

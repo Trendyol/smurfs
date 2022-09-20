@@ -1,11 +1,11 @@
 package install
 
 import (
-	"github.com/trendyol/smurfs/host/pkg/download"
-	"github.com/trendyol/smurfs/host/pkg/environment"
-	"github.com/trendyol/smurfs/host/pkg/install/receipt"
-	"github.com/trendyol/smurfs/host/pkg/plugin"
-	"github.com/trendyol/smurfs/host/pkg/util/pathutil"
+	"github.com/trendyol/smurfs/go/host/pkg/download"
+	"github.com/trendyol/smurfs/go/host/pkg/environment"
+	"github.com/trendyol/smurfs/go/host/pkg/install/receipt"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/pkg/util/pathutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -68,7 +68,7 @@ func Install(p environment.Paths, plugin plugin.Plugin, opts InstallOpts) error 
 	klog.V(3).Infof("Install plugin %s at version=%s", plugin.Name, plugin.Spec.Version)
 	if err := install(installOperation{
 		pluginName: plugin.Name,
-		platform:   plugin.Spec.Platform,
+		platform:   plugin.Spec.Runnable,
 		binDir:     p.BinPath(),
 		installDir: p.PluginVersionInstallPath(plugin.Name, plugin.Spec.Version),
 	}, opts); err != nil {

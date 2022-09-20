@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/trendyol/smurfs/host/pkg/environment"
-	installation "github.com/trendyol/smurfs/host/pkg/install"
-	"github.com/trendyol/smurfs/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/pkg/environment"
+	installation "github.com/trendyol/smurfs/go/host/pkg/install"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"os"
@@ -45,9 +45,9 @@ func main() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test",
 		},
-		Spec: plugin.PluginSpec{
+		Spec: plugin.Spec{
 			Version: "v0.0.1",
-			Platform: plugin.Runnable{
+			Runnable: plugin.Runnable{
 				URI:    "https://github.com/sysdiglabs/kube-policy-advisor/releases/download/v1.0.2/kube-policy-advisor_v1.0.2_darwin_amd64.tar.gz",
 				Sha256: "043e6dd1608eae2b2845db41052fd7876c986fd82392166c176d119554cafbb4",
 				Bin:    "kubectl-advise-policy",
