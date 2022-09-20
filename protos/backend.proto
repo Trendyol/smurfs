@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/trendyol/smurfs/protos";
+option go_package = "github.com/trendyol/smurfs/go/protos";
 
 message Command {
   string name = 1;
