@@ -8,7 +8,6 @@ import (
 	"github.com/trendyol/smurfs/go/host/pkg/consts"
 	"github.com/trendyol/smurfs/go/host/pkg/download"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
-	"github.com/trendyol/smurfs/go/host/pkg/install/receipt"
 	"os"
 	"path"
 	"path/filepath"
@@ -66,7 +65,7 @@ func (m *manager) List(ctx context.Context) ([]Receipt, error) {
 		}
 
 		pluginReceiptPath := path.Join(installReceiptsPath, dirEntry.Name())
-		pluginReceipt, err := receipt.Load(pluginReceiptPath)
+		pluginReceipt, err := LoadReceiptFrom(pluginReceiptPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to load receipt")
 		}
@@ -81,7 +80,7 @@ func (m *manager) GetPluginReceipt(ctx context.Context, pluginName string) (Rece
 	installReceiptsPath := m.paths.InstallReceiptsPath()
 
 	pluginReceiptPath := path.Join(installReceiptsPath, pluginName+consts.YAMLExtension)
-	pluginReceipt, err := receipt.Load(pluginReceiptPath)
+	pluginReceipt, err := LoadReceiptFrom(pluginReceiptPath)
 	if err != nil {
 		return Receipt{}, errors.Wrap(err, "failed to load receipt")
 	}
@@ -113,17 +112,22 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 		}
 	}()
 
-	err = m.downloader.Download(ctx, plugin.Spec.Runnable.URI, tempDir)
+	distribution, err := plugin.GetCompatibleDistribution()
+	if err != nil {
+		return errors.Wrap(err, "could not get compatible distribution")
+	}
+
+	err = m.downloader.Download(ctx, distribution.Executable.Address, tempDir)
 	if err != nil {
 		return errors.Wrap(err, "could not download plugin")
 	}
 
-	downloadedArchivePath := path.Join(tempDir, filepath.Base(plugin.Spec.Runnable.URI))
+	downloadedArchivePath := path.Join(tempDir, filepath.Base(distribution.Executable.Address))
 
-	sha256Verifier := download.NewSha256Verifier(plugin.Spec.Runnable.Sha256)
-	if err = sha256Verifier.VerifyFile(ctx, downloadedArchivePath); err != nil {
-		return errors.Wrap(err, "could not verify downloaded archive")
-	}
+	//sha256Verifier := download.NewSha256Verifier(plugin.Spec.Runnable.Sha256)
+	//if err = sha256Verifier.VerifyFile(ctx, downloadedArchivePath); err != nil {
+	//	return errors.Wrap(err, "could not verify downloaded archive")
+	//}
 
 	if err = m.extractor.Extract(ctx, downloadedArchivePath, tempDir); err != nil {
 		return errors.Wrap(err, "could not extract downloaded archive")
@@ -135,7 +139,7 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 		return errors.Wrapf(err, "could not read archive contents %q", downloadedArchivePath)
 	}
 
-	pluginInstallPath := path.Join(m.paths.InstallPath(), plugin.Name, plugin.Spec.Version)
+	pluginInstallPath := path.Join(m.paths.InstallPath(), plugin.Name, distribution.Version)
 
 	for _, archiveContent := range archiveContents {
 		name := archiveContent.Name()
@@ -147,7 +151,8 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 	}
 
 	receiptPath := path.Join(m.paths.InstallReceiptsPath(), plugin.Name+consts.YAMLExtension)
-	if err = receipt.Store(receipt.New(plugin), receiptPath); err != nil {
+	receipt := plugin.GenerateReceipt()
+	if err = receipt.Store(receiptPath); err != nil {
 		return errors.Wrapf(err, "could not store receipt for plugin %q", plugin.Name)
 	}
 

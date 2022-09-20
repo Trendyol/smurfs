@@ -12,7 +12,7 @@ type OSArchPair struct {
 
 // String converts environment into a string
 func (p OSArchPair) String() string {
-	return fmt.Sprintf("%s/%s", p.OS, p.Arch)
+	return fmt.Sprintf("%s_%s", p.OS, p.Arch)
 }
 
 // OSArch returns the OS/arch combination to be used on the current system

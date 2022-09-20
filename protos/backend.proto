@@ -9,7 +9,7 @@ message Command {
   string example = 4;
   repeated string aliases = 5;
   repeated CommandFlag flags = 6;
-  CommandVersion version = 7;
+  string pluginRef = 7;
 }
 
 message CommandFlag {
@@ -19,12 +19,6 @@ message CommandFlag {
   bool required = 4;
   bool repeated = 5;
   string short = 6;
-}
-
-message CommandVersion {
-  string version = 1;
-  string sha = 2;
-  string url = 3;
 }
 
 message CommandRequest {
