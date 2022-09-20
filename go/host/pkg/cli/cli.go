@@ -12,6 +12,14 @@ const (
 	shortMessage = "Trendyol CLI"
 )
 
+var (
+	rootCmd = &cobra.Command{
+		Use:     cliName,
+		Version: version,
+		Short:   shortMessage,
+	}
+)
+
 // Builder is responsible for building the CLI from command manifests
 type Builder interface {
 	Build(commandManifests []*protos.Command) *cobra.Command
@@ -22,7 +30,7 @@ type cliBuilder struct {
 	commandWrapper CommandWrapper
 }
 
-func New(paths environment.Paths, commandWrapper CommandWrapper) Builder {
+func NewBuilder(paths environment.Paths, commandWrapper CommandWrapper) Builder {
 	return &cliBuilder{
 		paths:          paths,
 		commandWrapper: commandWrapper,
@@ -30,12 +38,6 @@ func New(paths environment.Paths, commandWrapper CommandWrapper) Builder {
 }
 
 func (c *cliBuilder) Build(commandManifests []*protos.Command) *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:     cliName,
-		Version: version,
-		Short:   shortMessage,
-	}
-
 	for _, cmdManifest := range commandManifests {
 		subCommand := &cobra.Command{
 			Use:     cmdManifest.Name,

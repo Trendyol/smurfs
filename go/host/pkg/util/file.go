@@ -30,3 +30,21 @@ func DecodeYAML(r io.ReadCloser, as interface{}) error {
 	}
 	return yaml.Unmarshal(b, &as)
 }
+
+// RemoveSymLink removes a symlink reference if exists.
+func RemoveSymLink(path string) error {
+	file, err := os.Lstat(path)
+	if os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return errors.Wrapf(err, "failed to stat symlink %q", path)
+	}
+
+	if file.Mode()&os.ModeSymlink == 0 {
+		return errors.Errorf("file %q is not a symlink (mode=%s)", path, file.Mode())
+	}
+	if err := os.Remove(path); err != nil {
+		return errors.Wrapf(err, "failed to remove the symlink in %q", path)
+	}
+	return nil
+}

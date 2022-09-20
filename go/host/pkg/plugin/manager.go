@@ -129,7 +129,27 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 		return errors.Wrap(err, "could not extract downloaded archive")
 	}
 
-	// todo: move plugin to store path
+	// move archive contents to plugin installation directory
+	archiveContents, err := os.ReadDir(downloadedArchivePath)
+	if err != nil {
+		return errors.Wrapf(err, "could not read archive contents %q", downloadedArchivePath)
+	}
+
+	pluginInstallPath := path.Join(m.paths.InstallPath(), plugin.Name, plugin.Spec.Version)
+
+	for _, archiveContent := range archiveContents {
+		name := archiveContent.Name()
+		sourcePath := path.Join(downloadedArchivePath, name)
+		destinationPath := path.Join(pluginInstallPath, name)
+		if err = os.Rename(sourcePath, destinationPath); err != nil {
+			return errors.Wrapf(err, "could not move file %q for plugin %q", name, plugin.Name)
+		}
+	}
+
+	receiptPath := path.Join(m.paths.InstallReceiptsPath(), plugin.Name+consts.YAMLExtension)
+	if err = receipt.Store(receipt.New(plugin), receiptPath); err != nil {
+		return errors.Wrapf(err, "could not store receipt for plugin %q", plugin.Name)
+	}
 
 	return nil
 }

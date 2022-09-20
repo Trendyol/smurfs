@@ -29,6 +29,9 @@ type Runnable struct {
 	Sha256 string          `json:"sha256" yaml:"sha256"`
 	Files  []FileOperation `json:"files"  yaml:"files"`
 
+	// Entrypoint is the path to the binary in the archive
+	Entrypoint string `json:"name" yaml:"name"`
+
 	Bin string `json:"bin" yaml:"bin"`
 }
 

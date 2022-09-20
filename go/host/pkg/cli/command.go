@@ -3,6 +3,7 @@ package cli
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/trendyol/smurfs/host/pkg/plugin"
 	"github.com/trendyol/smurfs/go/host/pkg/process"
 	"github.com/trendyol/smurfs/go/host/protos"
 )
@@ -13,7 +14,8 @@ type CommandWrapper interface {
 }
 
 type wrapper struct {
-	exec process.Exec
+	exec          process.Exec
+	pluginManager plugin.Manager
 }
 
 func NewWrapper(exec process.Exec) CommandWrapper {
@@ -32,7 +34,8 @@ func (w *wrapper) Wrap(cmdManifest *protos.Command) func(cmd *cobra.Command, arg
 				"args":    args,
 			})
 
-		logger.Debugf("Running command: %s", cmdManifest.Name)
+		w.pluginManager.
+			logger.Debugf("Running command: %s", cmdManifest.Name)
 
 		if err := w.exec.Run(ctx, cmdManifest.Name, args...); err != nil {
 			logger.Errorf("Error running command: %s", cmdManifest.Name)
