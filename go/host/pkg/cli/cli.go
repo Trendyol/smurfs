@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
-	"github.com/trendyol/smurfs/go/host/protos"
+	"github.com/trendyol/smurfs/go/protos"
 )
 
 const (
