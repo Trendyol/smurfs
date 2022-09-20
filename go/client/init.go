@@ -2,7 +2,7 @@ package client
 
 import (
 	"flag"
-	"github.com/trendyol/smurfs/client/protos"
+	"github.com/trendyol/smurfs/go/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"

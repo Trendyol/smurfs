@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/trendyol/smurfs/go/host/protos"
+	"github.com/trendyol/smurfs/go/protos"
 	"io"
 	"log"
 )
