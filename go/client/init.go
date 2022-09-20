@@ -10,31 +10,30 @@ import (
 )
 
 var (
-	// Flags
-	hostAddr string
-
 	// Clients
-	authServerClient             protos.AuthServiceClient
 	metadataStorageServiceClient protos.MetadataStorageServiceClient
 )
 
 type Smurf struct {
 	Logger *service.LoggerClient
+	Auth   *service.AuthClient
 }
 
 type Options struct {
-	Port int
+	HostAddress *string
 }
 
-func InitializeClient() (*Smurf, error) {
-	flag.StringVar(&hostAddr, "host", "localhost:8080", "host address")
-	dial, err := grpc.Dial(hostAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func InitializeClient(opt Options) (*Smurf, error) {
+	if opt.HostAddress == nil {
+		flag.StringVar(opt.HostAddress, "host", "localhost:8080", "host address")
+	}
+
+	dial, err := grpc.Dial(*opt.HostAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("failed to dial: %+v", err)
 		return nil, err
 	}
 
-	authServerClient = protos.NewAuthServiceClient(dial)
 	metadataStorageServiceClient = protos.NewMetadataStorageServiceClient(dial)
 
 	loggerClient, err := service.NewLoggerClient(dial)
@@ -42,8 +41,14 @@ func InitializeClient() (*Smurf, error) {
 		return nil, err
 	}
 
+	authClient, err := service.NewAuthClient(dial)
+	if err != nil {
+		return nil, err
+	}
+
 	smurf := &Smurf{
 		Logger: loggerClient,
+		Auth:   authClient,
 	}
 
 	return smurf, nil
