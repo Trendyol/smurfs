@@ -1,5 +1,13 @@
 #! /bin/bash
 
+if ! command -v protoc &> /dev/null
+then
+    echo "protoc could not be found"
+    brew install protobuf
+    go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+fi
+
 set -e
 
 PROTO_FILES=$(find . -type f -name "*.proto" | xargs)
