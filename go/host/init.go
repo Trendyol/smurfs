@@ -14,16 +14,18 @@ type Options struct {
 	RootCmd *cobra.Command
 }
 
+type PluginBinary struct {
+	Name   string
+	Target string
+	Args   interface{}
+}
+
 type Plugin struct {
 	Name             string
 	ShortDescription string
 	LongDescription  string
 	Usage            string
-	Binaries         []struct {
-		Name   string
-		Target string
-		Args   interface{}
-	}
+	Binaries         []PluginBinary
 }
 
 func InitializeHost(options Options) (*SmurfHost, error) {
