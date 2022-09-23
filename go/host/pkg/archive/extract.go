@@ -12,7 +12,7 @@ const (
 )
 
 type Extractor interface {
-	Extract(ctx context.Context, sourceFilePath, destinationFolderPath string) error
+	Extract(ctx context.Context, sourceArchivePath, destinationFolderPath string) error
 }
 
 type extractorManager struct {
@@ -25,10 +25,10 @@ func NewExtractorManager(extractors map[string]Extractor) *extractorManager {
 	}
 }
 
-func (e *extractorManager) Extract(ctx context.Context, sourceFilePath, destinationFolderPath string) error {
-	mimeType, err := mimetype.DetectFile(sourceFilePath)
+func (e *extractorManager) Extract(ctx context.Context, sourceArchivePath, destinationFolderPath string) error {
+	mimeType, err := mimetype.DetectFile(sourceArchivePath)
 	if err != nil {
-		return errors.Wrapf(err, "could not find mimetype of the archive file %s", sourceFilePath)
+		return errors.Wrapf(err, "could not find mimetype of the archive file %s", sourceArchivePath)
 	}
 
 	extractor, ok := e.extractors[mimeType.String()]
@@ -36,5 +36,5 @@ func (e *extractorManager) Extract(ctx context.Context, sourceFilePath, destinat
 		return errors.Errorf("unsupported archive type %s", mimeType.String())
 	}
 
-	return extractor.Extract(ctx, sourceFilePath, destinationFolderPath)
+	return extractor.Extract(ctx, sourceArchivePath, destinationFolderPath)
 }

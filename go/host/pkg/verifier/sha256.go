@@ -1,16 +1,14 @@
-package download
+package verifier
 
 import (
 	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/pkg/errors"
 	"hash"
 	"io"
 	"os"
-
-	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
 )
 
 // Verifier can check a reader against its correctness.
@@ -37,7 +35,6 @@ func NewSha256Verifier(hashed string) Verifier {
 }
 
 func (v *sha256Verifier) Verify() error {
-	klog.V(1).Infof("Compare sha256 (%s) signed version", hex.EncodeToString(v.wantedHash))
 	if bytes.Equal(v.wantedHash, v.Sum(nil)) {
 		return nil
 	}

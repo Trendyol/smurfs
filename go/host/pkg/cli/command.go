@@ -36,6 +36,23 @@ func (w *wrapper) Wrap(cmdManifest *protos.Command) func(cmd *cobra.Command, arg
 
 		logger.Debugf("Running command: %s", cmdManifest.Name)
 
+		commandManifest := GetCommandManifest(ctx)
+		if commandManifest == nil {
+			logger.Error("command manifest is not found in the context")
+			return
+		}
+
+		// 1: check if the plugin is installed
+		// 2: compare plugin version & sha
+		// 3: download if not installed or version is not matched
+		// 4: run command with the necessary args
+
+		pluginReceipt, err := w.pluginManager.GetPluginReceipt(ctx, commandManifest.PluginRef)
+		if err != nil {
+			logger.WithError(err).Errorf("could not get plugin receipt %q", commandManifest.PluginRef)
+			return
+		}
+
 		if err := w.exec.Run(ctx, cmdManifest.Name, args...); err != nil {
 			logger.Errorf("Error running command: %s", cmdManifest.Name)
 		}

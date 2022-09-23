@@ -6,8 +6,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/trendyol/smurfs/go/host/pkg/archive"
 	"github.com/trendyol/smurfs/go/host/pkg/consts"
-	"github.com/trendyol/smurfs/go/host/pkg/download"
+	"github.com/trendyol/smurfs/go/host/pkg/downloader"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
+	"github.com/trendyol/smurfs/go/host/pkg/verifier"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,23 +29,23 @@ type Manager interface {
 }
 
 type manager struct {
-	paths      environment.Paths
-	downloader download.Downloader
-	extractor  archive.Extractor
-	verifier   download.Verifier
+	paths          environment.Paths
+	downloader     downloader.Downloader
+	extractor      archive.Extractor
+	sha256Verifier verifier.Verifier
 }
 
 func NewManager(
 	paths environment.Paths,
-	downloader download.Downloader,
+	downloader downloader.Downloader,
 	extractor archive.Extractor,
-	verifier download.Verifier,
+	sha256Verifier verifier.Verifier,
 ) Manager {
 	return &manager{
-		paths:      paths,
-		downloader: downloader,
-		extractor:  extractor,
-		verifier:   verifier,
+		paths:          paths,
+		downloader:     downloader,
+		extractor:      extractor,
+		sha256Verifier: sha256Verifier,
 	}
 }
 
@@ -151,7 +152,7 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 	}
 
 	receiptPath := path.Join(m.paths.InstallReceiptsPath(), plugin.Name+consts.YAMLExtension)
-	receipt := plugin.GenerateReceipt()
+	receipt := plugin.GenerateReceipt(distribution)
 	if err = receipt.Store(receiptPath); err != nil {
 		return errors.Wrapf(err, "could not store receipt for plugin %q", plugin.Name)
 	}
