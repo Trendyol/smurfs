@@ -3,20 +3,15 @@ package client
 import (
 	"flag"
 	"github.com/trendyol/smurfs/go/client/pkg/service"
-	"github.com/trendyol/smurfs/go/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 )
 
-var (
-	// Clients
-	metadataStorageServiceClient protos.MetadataStorageServiceClient
-)
-
 type Smurf struct {
-	Logger *service.LoggerClient
-	Auth   *service.AuthClient
+	Logger  *service.LoggerClient
+	Auth    *service.AuthClient
+	Storage *service.StorageClient
 }
 
 type Options struct {
@@ -34,8 +29,6 @@ func InitializeClient(opt Options) (*Smurf, error) {
 		return nil, err
 	}
 
-	metadataStorageServiceClient = protos.NewMetadataStorageServiceClient(dial)
-
 	loggerClient, err := service.NewLoggerClient(dial)
 	if err != nil {
 		return nil, err
@@ -46,9 +39,15 @@ func InitializeClient(opt Options) (*Smurf, error) {
 		return nil, err
 	}
 
+	storageClient, err := service.NewStorageClient(dial)
+	if err != nil {
+		return nil, err
+	}
+
 	smurf := &Smurf{
-		Logger: loggerClient,
-		Auth:   authClient,
+		Logger:  loggerClient,
+		Auth:    authClient,
+		Storage: storageClient,
 	}
 
 	return smurf, nil

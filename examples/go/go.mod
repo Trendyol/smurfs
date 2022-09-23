@@ -1,3 +1,3 @@
-module github.com/trendyol/smurfs/example/go
+module github.com/trendyol/smurfs/examples/go
 
 go 1.19

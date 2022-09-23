@@ -1,4 +1,4 @@
-module github.com/trendyol/smurfs/go
+module github.com/trendyol/smurfs
 
 go 1.19
 
