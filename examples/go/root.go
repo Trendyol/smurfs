@@ -5,6 +5,12 @@ import (
 	"github.com/trendyol/smurfs/go/host"
 )
 
+type MyLogger struct {
+}
+
+func (l *MyLogger) Debug(message string, args ...interface{}) {
+}
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "host",

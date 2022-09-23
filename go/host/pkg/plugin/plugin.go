@@ -66,4 +66,5 @@ const (
 	GitHubExecutableProvider = ExecutableProvider("GitHub")
 	GitLabExecutableProvider = ExecutableProvider("GitLab")
 	URIExecutableProvider    = ExecutableProvider("URI")
+	LocalExecutableProvider  = ExecutableProvider("Local")
 )

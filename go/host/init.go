@@ -3,15 +3,20 @@ package host
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"os"
+	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
 type SmurfHost struct {
+	Root   *cobra.Command
+	Logger *Logger
 }
 
 type Options struct {
-	Plugins []Plugin
-	RootCmd *cobra.Command
+	Plugins     []Plugin
+	RootCmd     *cobra.Command
+	HostAddress string
 }
 
 type PluginBinary struct {
@@ -29,6 +34,8 @@ type Plugin struct {
 }
 
 func InitializeHost(options Options) (*SmurfHost, error) {
+	// TODO(peacecwz): register commands and flags to root command
+	// TODO(peacecwz): register plugins
 	if options.RootCmd == nil {
 		options.RootCmd = &cobra.Command{
 			Use:   "host",
@@ -49,9 +56,32 @@ func InitializeHost(options Options) (*SmurfHost, error) {
 
 		options.RootCmd.AddCommand(cmd)
 	}
-	if err := options.RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+
+	if options.HostAddress == "" {
+		options.HostAddress = ":50051"
 	}
-	return &SmurfHost{}, nil
+
+	lis, err := net.Listen("tcp", options.HostAddress)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
+	err = grpcServer.Serve(lis)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	return &SmurfHost{
+		Root: options.RootCmd,
+	}, nil
+}
+
+func (host SmurfHost) Execute() error {
+	if err := host.Root.Execute(); err != nil {
+		return err
+	}
+
+	return nil
 }
