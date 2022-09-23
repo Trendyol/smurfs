@@ -1,4 +1,4 @@
-package main
+package host
 
 import (
 	"github.com/trendyol/smurfs/go/host/pkg/environment"

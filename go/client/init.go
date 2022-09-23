@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-type Smurf struct {
+type SmurfClient struct {
 	Logger  *service.LoggerClient
 	Auth    *service.AuthClient
 	Storage *service.StorageClient
@@ -18,7 +18,7 @@ type Options struct {
 	HostAddress *string
 }
 
-func InitializeClient(opt Options) (*Smurf, error) {
+func InitializeClient(opt Options) (*SmurfClient, error) {
 	if opt.HostAddress == nil {
 		flag.StringVar(opt.HostAddress, "host", "localhost:8080", "host address")
 	}
@@ -44,7 +44,7 @@ func InitializeClient(opt Options) (*Smurf, error) {
 		return nil, err
 	}
 
-	smurf := &Smurf{
+	smurf := &SmurfClient{
 		Logger:  loggerClient,
 		Auth:    authClient,
 		Storage: storageClient,
