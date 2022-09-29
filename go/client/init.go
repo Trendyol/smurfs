@@ -12,6 +12,7 @@ type SmurfClient struct {
 	Logger  *service.LoggerClient
 	Auth    *service.AuthClient
 	Storage *service.StorageClient
+	Close   func() error
 }
 
 type Options struct {
@@ -48,6 +49,9 @@ func InitializeClient(opt Options) (*SmurfClient, error) {
 		Logger:  loggerClient,
 		Auth:    authClient,
 		Storage: storageClient,
+		Close: func() error {
+			return dial.Close()
+		},
 	}
 
 	return smurf, nil

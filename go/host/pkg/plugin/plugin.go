@@ -12,9 +12,12 @@ var (
 )
 
 type Plugin struct {
-	Name          string         `yaml:"name"`
-	Description   string         `yaml:"description"`
-	Distributions []Distribution `yaml:"distributions"`
+	Name             string                 `yaml:"name"`
+	ShortDescription string                 `yaml:"shortDescription"`
+	LongDescription  string                 `yaml:"longDescription"`
+	Usage            string                 `yaml:"usage"`
+	Source           map[string]interface{} `yaml:"source"`
+	Distributions    []Distribution         `yaml:"distributions"`
 }
 
 func (p Plugin) GetCompatibleDistribution() (Distribution, error) {
@@ -30,7 +33,7 @@ func (p Plugin) GetCompatibleDistribution() (Distribution, error) {
 func (p Plugin) GenerateReceipt(distribution Distribution) Receipt {
 	return Receipt{
 		Name:        p.Name,
-		Description: p.Description,
+		Description: p.ShortDescription,
 		Executable: ExecutableArchive{
 			Executable: distribution.Executable,
 		},

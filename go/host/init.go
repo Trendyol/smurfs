@@ -1,41 +1,77 @@
 package host
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/pkg/process"
+	"github.com/trendyol/smurfs/go/protos"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"io"
 	"log"
 	"net"
 )
 
 type SmurfHost struct {
-	Root   *cobra.Command
-	Logger *Logger
+	Root *cobra.Command
 }
 
 type Options struct {
-	Plugins     []Plugin
+	Plugins     []plugin.Plugin
 	RootCmd     *cobra.Command
 	HostAddress string
+	Logger      Logger
 }
 
-type PluginBinary struct {
-	Name   string
-	Target string
-	Args   interface{}
+type LogService struct {
+	protos.UnimplementedLogServiceServer
 }
 
-type Plugin struct {
-	Name             string
-	ShortDescription string
-	LongDescription  string
-	Usage            string
-	Binaries         []PluginBinary
+func (l LogService) Info(stream protos.LogService_InfoServer) error {
+	for {
+		l, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&emptypb.Empty{})
+		}
+
+		if err != nil {
+			return err
+		}
+
+		log.Println(l.Msg)
+	}
+}
+
+func Start(hostAddress string, up chan struct{}) {
+	lis, err := net.Listen("tcp", hostAddress)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	if up != nil {
+		close(up)
+	}
+
+	s := grpc.NewServer()
+	protos.RegisterLogServiceServer(s, &LogService{})
+	reflection.Register(s)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
 
 func InitializeHost(options Options) (*SmurfHost, error) {
-	// TODO(peacecwz): register commands and flags to root command
-	// TODO(peacecwz): register plugins
+	if options.HostAddress == "" {
+		options.HostAddress = "localhost:50051"
+	}
+
+	up := make(chan struct{})
+	go Start(options.HostAddress, up)
+	<-up
+	execManager := process.NewExec()
 	if options.RootCmd == nil {
 		options.RootCmd = &cobra.Command{
 			Use:   "host",
@@ -44,33 +80,29 @@ func InitializeHost(options Options) (*SmurfHost, error) {
 		}
 	}
 
-	for _, plugin := range options.Plugins {
+	for _, pl := range options.Plugins {
 		cmd := &cobra.Command{
-			Use:   plugin.Name,
-			Short: plugin.ShortDescription,
-			Long:  plugin.LongDescription,
+			Use:   pl.Name,
+			Short: pl.ShortDescription,
+			Long:  pl.LongDescription,
 			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println("Micro CLI is running")
+				var currentPlugin plugin.Plugin
+				for _, p := range options.Plugins {
+					if p.Name == cmd.Name() {
+						currentPlugin = p
+						break
+					}
+				}
+
+				err := execManager.Run(context.Background(), currentPlugin, args...)
+				if err != nil {
+					log.Fatalf(err.Error())
+				}
+				fmt.Println("Done")
 			},
 		}
 
 		options.RootCmd.AddCommand(cmd)
-	}
-
-	if options.HostAddress == "" {
-		options.HostAddress = ":50051"
-	}
-
-	lis, err := net.Listen("tcp", options.HostAddress)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	var opts []grpc.ServerOption
-	grpcServer := grpc.NewServer(opts...)
-	err = grpcServer.Serve(lis)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
 	}
 
 	return &SmurfHost{

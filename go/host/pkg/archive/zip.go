@@ -56,4 +56,5 @@ func (e *zipExtractor) Extract(ctx context.Context, sourceFilePath, destinationF
 		closeAll()
 	}
 
+	return nil
 }

@@ -10,6 +10,7 @@ type LoggerClient struct {
 }
 
 var (
+	client       protos.LogServiceClient
 	debugService protos.LogService_DebugClient
 	infoService  protos.LogService_InfoClient
 	warnService  protos.LogService_WarnClient
@@ -18,15 +19,10 @@ var (
 )
 
 func NewLoggerClient(dial *grpc.ClientConn) (*LoggerClient, error) {
-	client := protos.NewLogServiceClient(dial)
+	client = protos.NewLogServiceClient(dial)
 	var err error
 
 	debugService, err = client.Debug(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	infoService, err = client.Info(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -60,13 +56,20 @@ func (l *LoggerClient) Debug(message string, args ...interface{}) {
 }
 
 func (l *LoggerClient) Info(message string, args ...interface{}) {
-	err := infoService.Send(&protos.LogRequest{
+	infoService, err := client.Info(context.Background())
+	if err != nil {
+		return
+	}
+
+	err = infoService.Send(&protos.LogRequest{
 		Msg: message,
 	})
 
 	if err != nil {
 		return
 	}
+
+	infoService.CloseSend()
 }
 
 func (l *LoggerClient) Warn(message string, args ...interface{}) {

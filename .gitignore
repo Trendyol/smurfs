@@ -351,3 +351,6 @@ MigrationBackup/
 
 # IntelliJ
 .idea
+
+go/micro1
+go/micro2
