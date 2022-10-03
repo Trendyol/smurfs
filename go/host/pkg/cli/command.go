@@ -42,10 +42,9 @@ func (w *wrapper) Wrap(cmdManifest *protos.Command) func(cmd *cobra.Command, arg
 			return
 		}
 
-		// 1: check if the plugin is installed
-		// 2: compare plugin version & sha
-		// 3: download if not installed or version is not matched
-		// 4: run command with the necessary args
+		// 1: find related plugin with the command
+		// 2: download if not installed or version is not matched
+		// 3: run command with the necessary args
 
 		pluginReceipt, err := w.pluginManager.GetPluginReceipt(ctx, commandManifest.PluginRef)
 		if err != nil {

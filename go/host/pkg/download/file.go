@@ -1,4 +1,4 @@
-package downloader
+package download
 
 import (
 	"context"
@@ -12,15 +12,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Downloader interface {
+type FileDownloader interface {
 	Download(ctx context.Context, uri, destinationFolder string) error
 }
 
-type downloader struct{}
+type fileDownloader struct {
+	httpClient *http.Client
+}
 
-func (d *downloader) Download(ctx context.Context, uri, destinationFolder string) error {
-	// todo: override client
-	resp, err := http.Get(uri)
+func NewFileDownloader(httpClient *http.Client) FileDownloader {
+	return &fileDownloader{
+		httpClient: httpClient,
+	}
+}
+
+func (d *fileDownloader) Download(ctx context.Context, uri, destinationFolder string) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
+	if err != nil {
+		return errors.Wrapf(err, "could not create download request for %s", uri)
+	}
+
+	resp, err := d.httpClient.Do(req)
 	if err != nil {
 		return errors.Wrapf(err, "could not download %s", uri)
 	}

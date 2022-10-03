@@ -15,6 +15,7 @@ type Receipt struct {
 }
 
 type ExecutableArchive struct {
+	Version    string     `yaml:"version"`
 	Executable Executable `yaml:",inline"`
 	ArchiveURL string     `yaml:"archiveURL"`
 	SHA256Sum  string     `yaml:"sha256Sum"`

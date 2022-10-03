@@ -35,6 +35,7 @@ func (p Plugin) GenerateReceipt(distribution Distribution) Receipt {
 		Name:        p.Name,
 		Description: p.ShortDescription,
 		Executable: ExecutableArchive{
+			Version:    distribution.Version,
 			Executable: distribution.Executable,
 		},
 		InstalledAt: time.Now(),
@@ -59,8 +60,21 @@ type Executable struct {
 	// Required for the URI provider.
 	SHA256 string `yaml:"sha256"`
 
-	// Entrypoint specifies which file will be executed in the archive. (Required)
+	// Entrypoint specifies which file will be executed in the archive. Support templates. (Required)
 	Entrypoint string `yaml:"entrypoint"`
+
+	// Archive specifies which file will be downloaded. Support templates. (Required)
+	Archive string `yaml:"archive"`
+}
+
+// GetEntrypoint evaluates the entrypoint template with the given context.
+func (e Executable) GetEntrypoint() string {
+	return e.Entrypoint
+}
+
+// GetArchiveName evaluates the archive template with the given context.
+func (e Executable) GetArchiveName() string {
+	return e.Entrypoint
 }
 
 type ExecutableProvider string
