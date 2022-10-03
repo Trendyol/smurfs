@@ -50,7 +50,7 @@ func (l *Logger) Debug(message string, args ...interface{}) {
 }
 
 func (l *Logger) Info(message string, args ...interface{}) {
-	fmt.Println("Fuck")
+	fmt.Printf("HOST-INFO: %s\n", message)
 }
 
 func (l *Logger) Warn(message string, args ...interface{}) {

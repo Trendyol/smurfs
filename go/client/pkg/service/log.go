@@ -18,26 +18,31 @@ var (
 	fatalService protos.LogService_FatalClient
 )
 
-func NewLoggerClient(dial *grpc.ClientConn) (*LoggerClient, error) {
+func NewLoggerClient(dial *grpc.ClientConn, ctx context.Context) (*LoggerClient, error) {
 	client = protos.NewLogServiceClient(dial)
 	var err error
 
-	debugService, err = client.Debug(context.Background())
+	infoService, err = client.Info(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	warnService, err = client.Warn(context.Background())
+	debugService, err = client.Debug(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	errorService, err = client.Error(context.Background())
+	warnService, err = client.Warn(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	fatalService, err = client.Fatal(context.Background())
+	errorService, err = client.Error(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fatalService, err = client.Fatal(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,20 +61,13 @@ func (l *LoggerClient) Debug(message string, args ...interface{}) {
 }
 
 func (l *LoggerClient) Info(message string, args ...interface{}) {
-	infoService, err := client.Info(context.Background())
-	if err != nil {
-		return
-	}
-
-	err = infoService.Send(&protos.LogRequest{
+	err := infoService.Send(&protos.LogRequest{
 		Msg: message,
 	})
 
 	if err != nil {
 		return
 	}
-
-	infoService.CloseSend()
 }
 
 func (l *LoggerClient) Warn(message string, args ...interface{}) {

@@ -16,15 +16,15 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
+	i := 0
+	for {
+		smurfs.Logger.Info(fmt.Sprintf("Micro CLI %d", i))
+		i++
 
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-
-	fmt.Println("Complete it")
+		if i > 100 {
+			break
+		}
+	}
 
 	err = smurfs.Close()
 	if err != nil {

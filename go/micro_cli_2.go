@@ -17,12 +17,12 @@ func main() {
 		panic(err)
 	}
 
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
-	smurfs.Logger.Info("Micro CLI 1")
+	smurfs.Logger.Info("Micro CLI 2")
+	smurfs.Logger.Info("Micro CLI 2")
+	smurfs.Logger.Info("Micro CLI 2")
+	smurfs.Logger.Info("Micro CLI 2")
+	smurfs.Logger.Info("Micro CLI 2")
+	smurfs.Logger.Info("Micro CLI 2")
 
 	fmt.Println("Complete it")
 

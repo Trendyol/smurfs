@@ -15,6 +15,8 @@ import (
 	"net"
 )
 
+var hostLogger Logger
+
 type SmurfHost struct {
 	Root *cobra.Command
 }
@@ -41,7 +43,7 @@ func (l LogService) Info(stream protos.LogService_InfoServer) error {
 			return err
 		}
 
-		log.Println(l.Msg)
+		hostLogger.Info(l.Msg)
 	}
 }
 
@@ -67,6 +69,8 @@ func InitializeHost(options Options) (*SmurfHost, error) {
 	if options.HostAddress == "" {
 		options.HostAddress = "localhost:50051"
 	}
+
+	hostLogger = options.Logger
 
 	up := make(chan struct{})
 	go Start(options.HostAddress, up)
