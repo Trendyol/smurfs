@@ -2,7 +2,6 @@ package archive
 
 import (
 	"context"
-	"fmt"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/pkg/errors"
 )
@@ -31,8 +30,6 @@ func (e *extractorManager) Extract(ctx context.Context, sourceArchivePath, desti
 	if err != nil {
 		return errors.Wrapf(err, "could not find mimetype of the archive file %s", sourceArchivePath)
 	}
-
-	fmt.Printf("mimetype: %s\n", mimeType.String())
 
 	extractor, ok := e.extractors[mimeType.String()]
 	if !ok {

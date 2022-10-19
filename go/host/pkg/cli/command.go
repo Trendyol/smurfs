@@ -15,11 +15,11 @@ type CommandWrapper interface {
 }
 
 type wrapper struct {
-	exec          process.Exec
+	exec          process.Executor
 	pluginManager plugin.Manager
 }
 
-func NewCmdWrapper(exec process.Exec, pluginManager plugin.Manager) CommandWrapper {
+func NewCmdWrapper(exec process.Executor, pluginManager plugin.Manager) CommandWrapper {
 	return &wrapper{
 		exec:          exec,
 		pluginManager: pluginManager,
@@ -44,7 +44,7 @@ func (w *wrapper) Wrap(plugin *plugin.Plugin) func(cmd *cobra.Command, args []st
 
 		pluginReceipt, err := w.pluginManager.GetPluginReceipt(ctx, plugin.Name)
 		if err != nil && errors.Is(err, models.ErrPluginNotInstalled) {
-			err := w.pluginManager.Install(ctx, *plugin)
+			pluginReceipt, err = w.pluginManager.Install(ctx, *plugin)
 			if err != nil {
 				logger.WithError(err).Errorf("Failed to install plugin: %s", plugin.Name)
 				return

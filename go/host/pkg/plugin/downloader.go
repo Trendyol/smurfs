@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/trendyol/smurfs/go/host/pkg/download"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
@@ -53,7 +52,6 @@ func (d *downloaderImpl) Download(ctx context.Context, distribution models.Distr
 		currentPath, _ := os.Getwd()
 		sourceFullPath := path.Join(currentPath, archive.URL)
 		destinationFullPath := path.Join(destinationFolder, filepath.Base(distribution.Executable.Address))
-		fmt.Printf("Copying %s to %s\n", sourceFullPath, destinationFullPath)
 		_, err := util.CopyFile(sourceFullPath, destinationFullPath)
 		return err
 	}

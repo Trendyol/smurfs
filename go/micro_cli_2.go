@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting micro2")
 	host := "localhost:50051"
 	smurfs, err := client.InitializeClient(client.Options{
 		HostAddress: &host,
 	})
+
 	if err != nil {
 		fmt.Println(err)
 		panic(err)

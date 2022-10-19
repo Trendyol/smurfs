@@ -22,7 +22,7 @@ type Options struct {
 
 // Builder is responsible for building the CLI from command manifests
 type Builder interface {
-	Build(options Options) *cobra.Command
+	Build(options *Options) *cobra.Command
 }
 
 type cliBuilder struct {
@@ -37,7 +37,7 @@ func NewBuilder(paths environment.Paths, commandWrapper CommandWrapper) Builder 
 	}
 }
 
-func (c *cliBuilder) Build(options Options) *cobra.Command {
+func (c *cliBuilder) Build(options *Options) *cobra.Command {
 	for _, p := range options.Plugins {
 		ctx := ContextWithCommandManifest(context.Background(), p)
 

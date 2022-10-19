@@ -2,13 +2,13 @@ package plugin
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/trendyol/smurfs/go/host/pkg/archive"
 	"github.com/trendyol/smurfs/go/host/pkg/consts"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
 	"github.com/trendyol/smurfs/go/host/pkg/models"
+	"github.com/trendyol/smurfs/go/host/pkg/util"
 	"github.com/trendyol/smurfs/go/host/pkg/verifier"
 	"os"
 	"path"
@@ -24,7 +24,7 @@ type Manager interface {
 	// GetPluginReceipt returns the receipt of the given plugin.
 	GetPluginReceipt(ctx context.Context, pluginName string) (Receipt, error)
 	// Install installs a plugin.
-	Install(ctx context.Context, plugin Plugin) error
+	Install(ctx context.Context, plugin Plugin) (Receipt, error)
 	// Uninstall uninstalls a plugin.
 	Uninstall(ctx context.Context, plugin Plugin) error
 }
@@ -92,62 +92,59 @@ func (m *manager) GetPluginReceipt(ctx context.Context, pluginName string) (Rece
 	return pluginReceipt, nil
 }
 
-func (m *manager) Install(ctx context.Context, plugin Plugin) error {
+func (m *manager) Install(ctx context.Context, plugin Plugin) (Receipt, error) {
 	logger := logrus.WithContext(ctx)
 
 	distribution, err := plugin.GetCompatibleDistribution()
 	if err != nil {
-		return errors.Wrapf(err, "could not get compatible distribution for plugin %q", plugin.Name)
+		return Receipt{}, errors.Wrapf(err, "could not get compatible distribution for plugin %q", plugin.Name)
 	}
 
 	// download plugin to a temporary directory
 	tempDir, err := os.MkdirTemp("", "smurfs-temp")
 	if err != nil {
-		return errors.Wrapf(err, "could not create temporary directory for plugin %q", plugin.Name)
+		return Receipt{}, errors.Wrapf(err, "could not create temporary directory for plugin %q", plugin.Name)
 	}
 
 	// clean tempDir after the installation
 	defer func() {
-		logger.WithError(err).Warningf("could not remove temp dir %q after the installation of the plugin %s", tempDir, plugin.Name)
-		/*if err := os.RemoveAll(tempDir); err != nil {
+		if err := os.RemoveAll(tempDir); err != nil {
 			logger.WithError(err).Warningf("could not remove temp dir %q after the installation of the plugin %s", tempDir, plugin.Name)
-		}*/
+		}
 	}()
 
 	err = m.downloader.Download(ctx, distribution, tempDir)
 	if err != nil {
-		return errors.Wrapf(err, "could not download plugin %q", plugin.Name)
+		return Receipt{}, errors.Wrapf(err, "could not download plugin %q", plugin.Name)
 	}
 
 	archivePath := path.Join(tempDir, filepath.Base(distribution.Executable.Address))
-	fmt.Printf("archivePath: %s\n", archivePath)
 
 	if !distribution.SkipVerification {
 		m.sha256Verifier = verifier.NewSha256Verifier(distribution.Executable.SHA256)
 		err = m.sha256Verifier.VerifyFile(ctx, archivePath)
 		if err != nil {
-			return errors.Wrapf(err, "could not verify plugin %q", plugin.Name)
+			return Receipt{}, errors.Wrapf(err, "could not verify plugin %q", plugin.Name)
 		}
 	}
 
 	if err = m.extractor.Extract(ctx, archivePath, tempDir); err != nil {
-		return errors.Wrapf(err, "could not extract plugin %q", plugin.Name)
+		return Receipt{}, errors.Wrapf(err, "could not extract plugin %q", plugin.Name)
 	}
 
 	receipt := plugin.GenerateReceipt(distribution)
-
 	// move archive contents to plugin installation directory
 	if err = m.moveArchiveContents(archivePath, receipt); err != nil {
-		return errors.Wrapf(err, "could not move archive contents of plugin %q", plugin.Name)
+		return Receipt{}, errors.Wrapf(err, "could not move archive contents of plugin %q", plugin.Name)
 	}
 
 	// save receipt
 	receiptPath := path.Join(m.paths.InstallReceiptsPath(), plugin.Name+consts.YAMLExtension)
-	if err = receipt.Store(receiptPath); err != nil {
-		return errors.Wrapf(err, "could not store receipt for plugin %q", plugin.Name)
+	if err = receipt.Store(m.paths.BasePath(), receiptPath); err != nil {
+		return Receipt{}, errors.Wrapf(err, "could not store receipt for plugin %q", plugin.Name)
 	}
 
-	return nil
+	return receipt, nil
 }
 
 func (m *manager) Uninstall(ctx context.Context, plugin Plugin) error {
@@ -165,21 +162,53 @@ func (m *manager) Uninstall(ctx context.Context, plugin Plugin) error {
 }
 
 func (m *manager) moveArchiveContents(archivePath string, receipt Receipt) error {
+	pluginInstallPath := path.Join(m.paths.InstallPath(), receipt.Name, receipt.Executable.Version)
+
+	if isDir, err := util.IsDirectory(pluginInstallPath); err != nil || !isDir {
+		if err := os.MkdirAll(pluginInstallPath, 0755); err != nil {
+			return errors.Wrap(err, "could not create plugin directory")
+		}
+	}
+
+	if isDir, err := util.IsDirectory(archivePath); err == nil && !isDir {
+		_, err := m.moveFile(archivePath, receipt, pluginInstallPath, err)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 	archiveContents, err := os.ReadDir(archivePath)
 	if err != nil {
 		return errors.Wrapf(err, "could not read archive contents %q", archivePath)
 	}
 
-	pluginInstallPath := path.Join(m.paths.InstallPath(), receipt.Name, receipt.Executable.Version)
-
 	for _, archiveContent := range archiveContents {
-		name := archiveContent.Name()
-		sourcePath := path.Join(archivePath, name)
-		destinationPath := path.Join(pluginInstallPath, name)
-		if err = os.Rename(sourcePath, destinationPath); err != nil {
-			return errors.Wrapf(err, "could not move file %q for plugin %q", name, receipt.Name)
+		done, err := m.moveDir(archivePath, receipt, archiveContent, pluginInstallPath, err)
+		if done {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func (m *manager) moveDir(archivePath string, receipt Receipt, archiveContent os.DirEntry, pluginInstallPath string, err error) (bool, error) {
+	name := archiveContent.Name()
+	sourcePath := path.Join(archivePath, name)
+	destinationPath := path.Join(pluginInstallPath, name)
+	if err = os.Rename(sourcePath, destinationPath); err != nil {
+		return true, errors.Wrapf(err, "could not move file %q for plugin %q", name, receipt.Name)
+	}
+	return false, nil
+}
+
+func (m *manager) moveFile(archivePath string, receipt Receipt, installPath string, err error) (bool, error) {
+	name := filepath.Base(archivePath)
+	destinationPath := path.Join(installPath, name)
+	if err = os.Rename(archivePath, destinationPath); err != nil {
+		return false, errors.Wrapf(err, "could not move file %q for plugin %q", name, receipt.Name)
+	}
+	return true, nil
 }

@@ -128,7 +128,7 @@ func main() {
 	logger := &Logger{}
 	hostAuth := &Auth{}
 	metadataStorage := &MetadataStorage{}
-	smurfHost, err := host.InitializeHost(cli.Options{
+	smurfHost, err := host.InitializeHost(&cli.Options{
 		Plugins:         plugins,
 		RootCmd:         rootCmd,
 		Logger:          logger,

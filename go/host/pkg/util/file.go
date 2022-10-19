@@ -50,27 +50,40 @@ func RemoveSymLink(path string) error {
 	return nil
 }
 
-func CopyFile(src, dst string) (int64, error) {
-	sourceFileStat, err := os.Stat(src)
+func CopyFile(source string, destination string) (int64, error) {
+	sourceFile, err := os.Open(source)
 	if err != nil {
 		return 0, err
 	}
+	defer sourceFile.Close()
 
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
-
-	source, err := os.Open(src)
+	tempFilePath := fmt.Sprintf("%s.tmp", destination)
+	destinationFile, err := os.Create(tempFilePath)
 	if err != nil {
 		return 0, err
 	}
-	defer source.Close()
-
-	destination, err := os.Create(dst)
+	err = destinationFile.Chmod(0755)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
-	nBytes, err := io.Copy(destination, source)
+	defer destinationFile.Close()
+	nBytes, err := io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return 0, err
+	}
+	err = destinationFile.Sync()
+	if err != nil {
+		return 0, err
+	}
+	err = os.Rename(tempFilePath, destination)
+
 	return nBytes, err
+}
+
+func IsDirectory(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return fileInfo.IsDir(), nil
 }

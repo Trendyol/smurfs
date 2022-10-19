@@ -1,10 +1,12 @@
 package plugin
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/trendyol/smurfs/go/host/pkg/models"
 	"github.com/trendyol/smurfs/go/host/pkg/util"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -22,10 +24,17 @@ type ExecutableArchive struct {
 	SHA256Sum  string            `yaml:"sha256Sum"`
 }
 
-func (r Receipt) Store(destinationPath string) error {
+func (r Receipt) Store(pluginPath, destinationPath string) error {
+
+	r.Executable.Executable.Entrypoint = fmt.Sprintf("%s/%s/%s/%s/%s", pluginPath, "store", r.Name, r.Executable.Version, r.Name)
 	yamlBytes, err := util.EncodeToYAML(r)
 	if err != nil {
 		return errors.Wrapf(err, "could not convert to yaml")
+	}
+
+	err = os.MkdirAll(filepath.Dir(destinationPath), 0755)
+	if err != nil {
+		return err
 	}
 
 	err = os.WriteFile(destinationPath, yamlBytes, 0o644)
