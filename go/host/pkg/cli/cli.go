@@ -3,27 +3,26 @@ package cli
 import (
 	"context"
 	"github.com/spf13/cobra"
+	"github.com/trendyol/smurfs/go/host/auth"
+	"github.com/trendyol/smurfs/go/host/logger"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
-	"github.com/trendyol/smurfs/go/protos"
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
+	"github.com/trendyol/smurfs/go/host/storage"
 )
 
-const (
-	cliName      = "ty"
-	version      = "0.0.1"
-	shortMessage = "Trendyol CLI"
-)
-
-var (
-	rootCmd = &cobra.Command{
-		Use:     cliName,
-		Version: version,
-		Short:   shortMessage,
-	}
-)
+type Options struct {
+	Plugins         []*plugin.Plugin
+	RootCmd         *cobra.Command
+	HostAddress     string
+	Logger          logger.Logger
+	Auth            auth.Auth
+	MetadataStorage storage.MetadataStorage
+	PluginPath      string
+}
 
 // Builder is responsible for building the CLI from command manifests
 type Builder interface {
-	Build(commandManifests []*protos.Command) *cobra.Command
+	Build(options Options) *cobra.Command
 }
 
 type cliBuilder struct {
@@ -38,20 +37,20 @@ func NewBuilder(paths environment.Paths, commandWrapper CommandWrapper) Builder 
 	}
 }
 
-func (c *cliBuilder) Build(commandManifests []*protos.Command) *cobra.Command {
-	for _, cmdManifest := range commandManifests {
-		ctx := ContextWithCommandManifest(context.Background(), cmdManifest)
+func (c *cliBuilder) Build(options Options) *cobra.Command {
+	for _, p := range options.Plugins {
+		ctx := ContextWithCommandManifest(context.Background(), p)
 
 		subCommand := &cobra.Command{
-			Use:     cmdManifest.Name,
-			Run:     c.commandWrapper.Wrap(cmdManifest),
-			Short:   cmdManifest.Description,
-			Example: cmdManifest.Usage,
+			Use:     p.Name,
+			Run:     c.commandWrapper.Wrap(p),
+			Short:   p.ShortDescription,
+			Example: p.Usage,
 		}
 
 		subCommand.SetContext(ctx)
 
-		for _, flag := range cmdManifest.Flags {
+		for _, flag := range p.Flags {
 			if flag.Repeated {
 				subCommand.Flags().StringSliceP(flag.Name, flag.Short, []string{}, flag.Description)
 			} else {
@@ -63,41 +62,8 @@ func (c *cliBuilder) Build(commandManifests []*protos.Command) *cobra.Command {
 			}
 		}
 
-		rootCmd.AddCommand(subCommand)
+		options.RootCmd.AddCommand(subCommand)
 	}
 
-	return rootCmd
-}
-
-var commandManifests = []*protos.Command{
-	{
-		Name:        "login",
-		Description: "to login with LDAP credentials",
-		Flags: []*protos.CommandFlag{
-			{
-				Name:        "email",
-				Required:    true,
-				Repeated:    false,
-				Description: "User email",
-			},
-			{
-				Name:        "password",
-				Required:    true,
-				Repeated:    false,
-				Description: "User password",
-			},
-		},
-	},
-	{
-		Name:        "logout",
-		Description: "to logout from CLI",
-		Flags: []*protos.CommandFlag{
-			{
-				Name:        "email",
-				Required:    false,
-				Repeated:    false,
-				Description: "User email",
-			},
-		},
-	},
+	return options.RootCmd
 }

@@ -1,7 +1,9 @@
 package pathutil
 
 import (
+	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -27,4 +29,28 @@ func ReplaceBase(path, old, replacement string) (string, error) {
 		return "", errors.Errorf("can't replace %q in %q, it is not a subpath", old, path)
 	}
 	return filepath.Join(replacement, extendingPath), nil
+}
+
+func GetHomeDir() string {
+	if runtime.GOOS == "windows" {
+
+		// First prefer the HOME environmental variable
+		if home := os.Getenv("HOME"); len(home) > 0 {
+			if _, err := os.Stat(home); err == nil {
+				return home
+			}
+		}
+		if homeDrive, homePath := os.Getenv("HOMEDRIVE"), os.Getenv("HOMEPATH"); len(homeDrive) > 0 && len(homePath) > 0 {
+			homeDir := homeDrive + homePath
+			if _, err := os.Stat(homeDir); err == nil {
+				return homeDir
+			}
+		}
+		if userProfile := os.Getenv("USERPROFILE"); len(userProfile) > 0 {
+			if _, err := os.Stat(userProfile); err == nil {
+				return userProfile
+			}
+		}
+	}
+	return os.Getenv("HOME")
 }

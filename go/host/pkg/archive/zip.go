@@ -11,6 +11,10 @@ import (
 
 type zipExtractor struct{}
 
+func NewZipExtractor() Extractor {
+	return &zipExtractor{}
+}
+
 func (e *zipExtractor) Extract(ctx context.Context, sourceFilePath, destinationFolderPath string) error {
 	zipReader, err := zip.OpenReader(sourceFilePath)
 	if err != nil {

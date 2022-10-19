@@ -2,11 +2,13 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/trendyol/smurfs/go/host/pkg/archive"
 	"github.com/trendyol/smurfs/go/host/pkg/consts"
 	"github.com/trendyol/smurfs/go/host/pkg/environment"
+	"github.com/trendyol/smurfs/go/host/pkg/models"
 	"github.com/trendyol/smurfs/go/host/pkg/verifier"
 	"os"
 	"path"
@@ -78,6 +80,10 @@ func (m *manager) List(ctx context.Context) ([]Receipt, error) {
 
 func (m *manager) GetPluginReceipt(ctx context.Context, pluginName string) (Receipt, error) {
 	pluginReceiptPath := path.Join(m.paths.InstallReceiptsPath(), pluginName+consts.YAMLExtension)
+	if _, err := os.Stat(pluginReceiptPath); errors.Is(err, os.ErrNotExist) {
+		return Receipt{}, errors.Wrapf(models.ErrPluginNotInstalled, "plugin %q is not installed", pluginName)
+	}
+
 	pluginReceipt, err := LoadReceiptFrom(pluginReceiptPath)
 	if err != nil {
 		return Receipt{}, errors.Wrap(err, "failed to load receipt")
@@ -88,15 +94,6 @@ func (m *manager) GetPluginReceipt(ctx context.Context, pluginName string) (Rece
 
 func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 	logger := logrus.WithContext(ctx)
-
-	// check plugin is already installed
-	_, err := m.GetPluginReceipt(ctx, plugin.Name)
-	if err != nil {
-		return errors.Wrapf(err, "could not get plugin %q receipt", plugin.Name)
-	}
-	if err == nil {
-		return errors.Wrapf(ErrPluginAlreadyInstalled, "plugin %q is already installed", plugin.Name)
-	}
 
 	distribution, err := plugin.GetCompatibleDistribution()
 	if err != nil {
@@ -111,9 +108,10 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 
 	// clean tempDir after the installation
 	defer func() {
-		if err := os.RemoveAll(tempDir); err != nil {
+		logger.WithError(err).Warningf("could not remove temp dir %q after the installation of the plugin %s", tempDir, plugin.Name)
+		/*if err := os.RemoveAll(tempDir); err != nil {
 			logger.WithError(err).Warningf("could not remove temp dir %q after the installation of the plugin %s", tempDir, plugin.Name)
-		}
+		}*/
 	}()
 
 	err = m.downloader.Download(ctx, distribution, tempDir)
@@ -122,8 +120,15 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) error {
 	}
 
 	archivePath := path.Join(tempDir, filepath.Base(distribution.Executable.Address))
+	fmt.Printf("archivePath: %s\n", archivePath)
 
-	// todo: verify downloaded archive here
+	if !distribution.SkipVerification {
+		m.sha256Verifier = verifier.NewSha256Verifier(distribution.Executable.SHA256)
+		err = m.sha256Verifier.VerifyFile(ctx, archivePath)
+		if err != nil {
+			return errors.Wrapf(err, "could not verify plugin %q", plugin.Name)
+		}
+	}
 
 	if err = m.extractor.Extract(ctx, archivePath, tempDir); err != nil {
 		return errors.Wrapf(err, "could not extract plugin %q", plugin.Name)

@@ -1,54 +1,70 @@
 package host
 
 import (
-	"context"
-	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/trendyol/smurfs/go/host/auth"
+	"github.com/trendyol/smurfs/go/host/logger"
+	"github.com/trendyol/smurfs/go/host/pkg/archive"
+	"github.com/trendyol/smurfs/go/host/pkg/cli"
+	"github.com/trendyol/smurfs/go/host/pkg/download"
+	"github.com/trendyol/smurfs/go/host/pkg/environment"
 	"github.com/trendyol/smurfs/go/host/pkg/plugin"
 	"github.com/trendyol/smurfs/go/host/pkg/process"
+	"github.com/trendyol/smurfs/go/host/pkg/providers"
+	"github.com/trendyol/smurfs/go/host/pkg/verifier"
+	"github.com/trendyol/smurfs/go/host/storage"
 	"github.com/trendyol/smurfs/go/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"io"
 	"log"
 	"net"
+	"net/http"
 )
-
-var hostLogger Logger
 
 type SmurfHost struct {
 	Root *cobra.Command
 }
 
-type Options struct {
-	Plugins     []plugin.Plugin
-	RootCmd     *cobra.Command
-	HostAddress string
-	Logger      Logger
+func InitializeHost(options cli.Options) (*SmurfHost, error) {
+	buildDefaultOptions(options)
+
+	up := make(chan struct{})
+	go Start(options, up)
+	<-up
+
+	paths := environment.NewPaths(options.PluginPath)
+	httpClient := http.Client{}
+	execManager := process.NewExec()
+	extractor := archive.NewExtractorManager(map[string]archive.Extractor{
+		"zip":    archive.NewZipExtractor(),
+		"tar.gz": archive.NewTarGzExtractor(),
+	})
+	downloader := plugin.NewDownloader(paths, providers.GetProviders(), download.NewFileDownloader(&httpClient))
+	pluginManager := plugin.NewManager(paths, downloader, extractor, verifier.NewSha256Verifier("sha256"))
+	cmdWrapper := cli.NewCmdWrapper(execManager, pluginManager)
+	builder := cli.NewBuilder(paths, cmdWrapper)
+
+	return &SmurfHost{
+		Root: builder.Build(options),
+	}, nil
 }
 
-type LogService struct {
-	protos.UnimplementedLogServiceServer
-}
+func buildDefaultOptions(options cli.Options) {
+	if options.HostAddress == "" {
+		options.HostAddress = "localhost:50051"
+	}
 
-func (l LogService) Info(stream protos.LogService_InfoServer) error {
-	for {
-		l, err := stream.Recv()
-		if err == io.EOF {
-			return stream.SendAndClose(&emptypb.Empty{})
+	if options.RootCmd == nil {
+		options.RootCmd = &cobra.Command{
+			Use:   "host",
+			Short: "Host CLI",
+			Long:  "Host CLI",
 		}
-
-		if err != nil {
-			return err
-		}
-
-		hostLogger.Info(l.Msg)
 	}
 }
 
-func Start(hostAddress string, up chan struct{}) {
-	lis, err := net.Listen("tcp", hostAddress)
+func Start(options cli.Options, up chan struct{}) {
+	lis, err := net.Listen("tcp", options.HostAddress)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -58,60 +74,13 @@ func Start(hostAddress string, up chan struct{}) {
 	}
 
 	s := grpc.NewServer()
-	protos.RegisterLogServiceServer(s, &LogService{})
+	protos.RegisterLogServiceServer(s, logger.NewLogService(options.Logger))
+	protos.RegisterAuthServiceServer(s, auth.NewAuthService(options.Auth))
+	protos.RegisterMetadataStorageServiceServer(s, storage.NewMetadataStorageService(options.MetadataStorage))
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-}
-
-func InitializeHost(options Options) (*SmurfHost, error) {
-	if options.HostAddress == "" {
-		options.HostAddress = "localhost:50051"
-	}
-
-	hostLogger = options.Logger
-
-	up := make(chan struct{})
-	go Start(options.HostAddress, up)
-	<-up
-	execManager := process.NewExec()
-	if options.RootCmd == nil {
-		options.RootCmd = &cobra.Command{
-			Use:   "host",
-			Short: "Host CLI",
-			Long:  "Host CLI",
-		}
-	}
-
-	for _, pl := range options.Plugins {
-		cmd := &cobra.Command{
-			Use:   pl.Name,
-			Short: pl.ShortDescription,
-			Long:  pl.LongDescription,
-			Run: func(cmd *cobra.Command, args []string) {
-				var currentPlugin plugin.Plugin
-				for _, p := range options.Plugins {
-					if p.Name == cmd.Name() {
-						currentPlugin = p
-						break
-					}
-				}
-
-				err := execManager.Run(context.Background(), currentPlugin, args...)
-				if err != nil {
-					log.Fatalf(err.Error())
-				}
-				fmt.Println("Done")
-			},
-		}
-
-		options.RootCmd.AddCommand(cmd)
-	}
-
-	return &SmurfHost{
-		Root: options.RootCmd,
-	}, nil
 }
 
 func (host SmurfHost) Execute() error {

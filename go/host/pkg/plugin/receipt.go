@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"github.com/pkg/errors"
+	"github.com/trendyol/smurfs/go/host/pkg/models"
 	"github.com/trendyol/smurfs/go/host/pkg/util"
 	"os"
 	"time"
@@ -15,10 +16,10 @@ type Receipt struct {
 }
 
 type ExecutableArchive struct {
-	Version    string     `yaml:"version"`
-	Executable Executable `yaml:",inline"`
-	ArchiveURL string     `yaml:"archiveURL"`
-	SHA256Sum  string     `yaml:"sha256Sum"`
+	Version    string            `yaml:"version"`
+	Executable models.Executable `yaml:",inline"`
+	ArchiveURL string            `yaml:"archiveURL"`
+	SHA256Sum  string            `yaml:"sha256Sum"`
 }
 
 func (r Receipt) Store(destinationPath string) error {

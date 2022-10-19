@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/trendyol/smurfs/go/host"
 )
 
 type MyLogger struct {
