@@ -352,5 +352,5 @@ MigrationBackup/
 # IntelliJ
 .idea
 
-go/micro1
-go/micro2
+*/**/micro1
+*/**/micro2

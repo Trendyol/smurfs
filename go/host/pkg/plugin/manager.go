@@ -140,7 +140,7 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) (Receipt, error) {
 
 	// save receipt
 	receiptPath := path.Join(m.paths.InstallReceiptsPath(), plugin.Name+consts.YAMLExtension)
-	if err = receipt.Store(m.paths.BasePath(), receiptPath); err != nil {
+	if receipt, err = receipt.Store(m.paths.BasePath(), receiptPath); err != nil {
 		return Receipt{}, errors.Wrapf(err, "could not store receipt for plugin %q", plugin.Name)
 	}
 
