@@ -1,7 +1,6 @@
 package host
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/trendyol/smurfs/go/host/auth"
 	"github.com/trendyol/smurfs/go/host/logger"
@@ -56,8 +55,6 @@ func buildDefaultOptions(options *cli.Options) {
 		options.HostAddress = "localhost:50051"
 	}
 
-	fmt.Printf("Host address: %s\n", options.HostAddress)
-
 	if options.RootCmd == nil {
 		options.RootCmd = &cobra.Command{
 			Use:   "host",
@@ -72,8 +69,6 @@ func Start(options *cli.Options, up chan struct{}) {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	fmt.Printf("Listening on %s\n", options.HostAddress)
 
 	if up != nil {
 		close(up)
