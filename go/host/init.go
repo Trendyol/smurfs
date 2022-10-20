@@ -35,6 +35,7 @@ func InitializeHost(options *cli.Options) (*SmurfHost, error) {
 
 	paths := environment.NewPaths(options.PluginPath)
 	httpClient := http.Client{}
+	providers.InitProviders(httpClient)
 	execManager := process.NewExec()
 	extractor := archive.NewExtractorManager(map[string]archive.Extractor{
 		"zip":    archive.NewZipExtractor(),

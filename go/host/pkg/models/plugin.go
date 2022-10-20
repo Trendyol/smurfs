@@ -19,6 +19,9 @@ type Executable struct {
 	// Provider specifies how the Address will be used. (Required)
 	Provider ExecutableProvider `yaml:"provider"`
 
+	// Provider specific data
+	ProviderData map[string]string `yaml:"providerData"`
+
 	// Address is the location of the executable archive. (Required)
 	Address string `yaml:"address"`
 
