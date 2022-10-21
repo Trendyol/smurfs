@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/spf13/cobra v1.5.0
-	github.com/trendyol/smurfs v0.0.8
+	github.com/trendyol/smurfs v0.0.9
 )
 
 require (
