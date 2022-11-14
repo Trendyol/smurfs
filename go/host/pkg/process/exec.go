@@ -3,9 +3,10 @@ package process
 import (
 	"context"
 	"fmt"
-	"github.com/trendyol/smurfs/go/host/pkg/plugin"
 	"os"
 	"os/exec"
+
+	"github.com/trendyol/smurfs/go/host/pkg/plugin"
 )
 
 type Executor interface {

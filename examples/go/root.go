@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/trendyol/smurfs/go/host"
 	"github.com/trendyol/smurfs/go/host/auth"
@@ -60,8 +61,9 @@ var plugins = []*plugin.Plugin{
 		LongDescription:  "Onboarding CLI",
 		Usage:            "onboarding",
 		Source: map[string]interface{}{
-			"type":   "gitlab",
-			"binary": "./micro2",
+			"type":      "gitlab",
+			"projectId": "12345",
+			"gitlabUrl": "https://gitlab.abc.com",
 		},
 	},
 }

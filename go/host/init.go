@@ -37,8 +37,8 @@ func InitializeHost(options *cli.Options) (*SmurfHost, error) {
 	providers.InitProviders(httpClient)
 	execManager := process.NewExec()
 	extractor := archive.NewExtractorManager(map[string]archive.Extractor{
-		"zip":    archive.NewZipExtractor(),
-		"tar.gz": archive.NewTarGzExtractor(),
+		"application/zip":  archive.NewZipExtractor(),
+		"application/gzip": archive.NewTarGzExtractor(),
 	})
 	downloader := plugin.NewDownloader(paths, providers.GetProviders(), download.NewFileDownloader(&httpClient))
 	pluginManager := plugin.NewManager(paths, downloader, extractor, verifier.NewSha256Verifier("sha256"))

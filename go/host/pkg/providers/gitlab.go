@@ -12,9 +12,11 @@ import (
 
 type gitlabRelease struct {
 	TagName string `json:"tag_name"`
-	Assets  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
+	Assets  struct {
+		Links []struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"links"`
 	} `json:"assets"`
 }
 
@@ -58,15 +60,18 @@ func (g *gitlabProvider) ResolveArchive(ctx context.Context, distribution models
 	}
 
 	var releases []gitlabRelease
+
 	err = json.NewDecoder(resp.Body).Decode(&releases)
 	if err != nil {
 		return models.Archive{}, errors.Wrapf(err, "failed to decode gitlab releases")
 	}
 
+	distributionName := fmt.Sprintf("%s_%s_%s.tar.gz", distribution.Executable.Archive, distribution.Version, distribution.Targets[0])
+
 	for _, release := range releases {
-		if release.TagName == distribution.Version {
-			for _, asset := range release.Assets {
-				if asset.Name == distribution.Executable.Archive {
+		if release.TagName == fmt.Sprintf("v%s", distribution.Version) {
+			for _, asset := range release.Assets.Links {
+				if asset.Name == distributionName {
 					return models.Archive{
 						URL:             asset.URL,
 						SHA256:          "",

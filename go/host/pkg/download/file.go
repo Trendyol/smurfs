@@ -13,7 +13,7 @@ import (
 )
 
 type FileDownloader interface {
-	Download(ctx context.Context, uri, destinationFolder string) error
+	Download(ctx context.Context, uri, destinationFolder string) (string, error)
 }
 
 type fileDownloader struct {
@@ -26,15 +26,15 @@ func NewFileDownloader(httpClient *http.Client) FileDownloader {
 	}
 }
 
-func (d *fileDownloader) Download(ctx context.Context, uri, destinationFolder string) error {
+func (d *fileDownloader) Download(ctx context.Context, uri, destinationFolder string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 	if err != nil {
-		return errors.Wrapf(err, "could not create download request for %s", uri)
+		return "", errors.Wrapf(err, "could not create download request for %s", uri)
 	}
 
 	resp, err := d.httpClient.Do(req)
 	if err != nil {
-		return errors.Wrapf(err, "could not download %s", uri)
+		return "", errors.Wrapf(err, "could not download %s", uri)
 	}
 	defer resp.Body.Close()
 
@@ -49,8 +49,8 @@ func (d *fileDownloader) Download(ctx context.Context, uri, destinationFolder st
 
 	_, err = io.Copy(file, resp.Body)
 	if err != nil {
-		return errors.Wrapf(err, "could not download %s", uri)
+		return "", errors.Wrapf(err, "could not download %s", uri)
 	}
 
-	return nil
+	return filePath, nil
 }

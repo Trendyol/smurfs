@@ -2,6 +2,11 @@ package plugin
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/trendyol/smurfs/go/host/pkg/archive"
@@ -10,9 +15,6 @@ import (
 	"github.com/trendyol/smurfs/go/host/pkg/models"
 	"github.com/trendyol/smurfs/go/host/pkg/util"
 	"github.com/trendyol/smurfs/go/host/pkg/verifier"
-	"os"
-	"path"
-	"path/filepath"
 )
 
 // TODO: use progressbar
@@ -113,12 +115,10 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) (Receipt, error) {
 		}
 	}()
 
-	err = m.downloader.Download(ctx, distribution, tempDir)
+	archivePath, err := m.downloader.Download(ctx, distribution, tempDir)
 	if err != nil {
 		return Receipt{}, errors.Wrapf(err, "could not download plugin %q", plugin.Name)
 	}
-
-	archivePath := path.Join(tempDir, filepath.Base(distribution.Executable.Address))
 
 	if !distribution.SkipVerification {
 		m.sha256Verifier = verifier.NewSha256Verifier(distribution.Executable.SHA256)
@@ -134,7 +134,7 @@ func (m *manager) Install(ctx context.Context, plugin Plugin) (Receipt, error) {
 
 	receipt := plugin.GenerateReceipt(distribution)
 	// move archive contents to plugin installation directory
-	if err = m.moveArchiveContents(archivePath, receipt); err != nil {
+	if err = m.moveArchiveContents(tempDir, distribution, receipt); err != nil {
 		return Receipt{}, errors.Wrapf(err, "could not move archive contents of plugin %q", plugin.Name)
 	}
 
@@ -161,8 +161,9 @@ func (m *manager) Uninstall(ctx context.Context, plugin Plugin) error {
 	return nil
 }
 
-func (m *manager) moveArchiveContents(archivePath string, receipt Receipt) error {
+func (m *manager) moveArchiveContents(tempDir string, distribution models.Distribution, receipt Receipt) error {
 	pluginInstallPath := path.Join(m.paths.InstallPath(), receipt.Name, receipt.Executable.Version)
+	archivePath := path.Join(tempDir, fmt.Sprintf("%s-%s", receipt.Name, distribution.Targets[0]))
 
 	if isDir, err := util.IsDirectory(pluginInstallPath); err != nil || !isDir {
 		if err := os.MkdirAll(pluginInstallPath, 0755); err != nil {
@@ -206,7 +207,7 @@ func (m *manager) moveDir(archivePath string, receipt Receipt, archiveContent os
 
 func (m *manager) moveFile(archivePath string, receipt Receipt, installPath string, err error) (bool, error) {
 	name := filepath.Base(archivePath)
-	destinationPath := path.Join(installPath, name)
+	destinationPath := path.Join(installPath, receipt.Name)
 	if err = os.Rename(archivePath, destinationPath); err != nil {
 		return false, errors.Wrapf(err, "could not move file %q for plugin %q", name, receipt.Name)
 	}

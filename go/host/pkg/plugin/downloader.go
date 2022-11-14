@@ -14,7 +14,7 @@ import (
 )
 
 type Downloader interface {
-	Download(ctx context.Context, distribution models.Distribution, destinationFolder string) error
+	Download(ctx context.Context, distribution models.Distribution, destinationFolder string) (string, error)
 }
 
 type downloaderImpl struct {
@@ -35,15 +35,15 @@ func NewDownloader(
 	}
 }
 
-func (d *downloaderImpl) Download(ctx context.Context, distribution models.Distribution, destinationFolder string) error {
+func (d *downloaderImpl) Download(ctx context.Context, distribution models.Distribution, destinationFolder string) (string, error) {
 	provider, ok := d.providers[distribution.Executable.Provider]
 	if !ok {
-		return errors.Wrapf(models.ErrUnknownArchiveProvider, "provider %s is not registered", distribution.Executable.Provider)
+		return "", errors.Wrapf(models.ErrUnknownArchiveProvider, "provider %s is not registered", distribution.Executable.Provider)
 	}
 
 	archive, err := provider.ResolveArchive(ctx, distribution)
 	if err != nil {
-		return errors.Wrap(err, "failed to resolve archive")
+		return "", errors.Wrap(err, "failed to resolve archive")
 	}
 
 	if !archive.CanSkipDownload {
@@ -53,6 +53,6 @@ func (d *downloaderImpl) Download(ctx context.Context, distribution models.Distr
 		sourceFullPath := path.Join(currentPath, archive.URL)
 		destinationFullPath := path.Join(destinationFolder, filepath.Base(distribution.Executable.Address))
 		_, err := util.CopyFile(sourceFullPath, destinationFullPath)
-		return err
+		return path.Join(destinationFolder, filepath.Base(distribution.Executable.Address)), err
 	}
 }
