@@ -1,4 +1,4 @@
-## Under the development
+![https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg](https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg)
 
 # Smurfs
 
@@ -8,9 +8,9 @@ Easy way to build extensible CLI with Smurfs. Smurfs is helping to build MicroCL
 
 | Language       | Host | Client |
 | -------------- | ---- | ------ |
-| Go             | ⏳    | ⏳      |
+| Go             | ✅ (Preview)    | ✅  (Preview)     |
+| C#             | ⏳    | ⏳      |
 | Node (TS & JS) | ❌    | ❌      |
-| C#             | ❌    | ❌      |
 | Java           | ❌    | ❌      |
 
 ## Go
