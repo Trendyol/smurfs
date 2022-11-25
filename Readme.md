@@ -1,6 +1,6 @@
 ![https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg](https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg)
 
-# Smurfs
+# Smurfs (Preview)
 
 Easy way to build extensible CLI with Smurfs. Smurfs is helping to build MicroCLI Architecture
 
@@ -12,13 +12,12 @@ Easy way to build extensible CLI with Smurfs. Smurfs is helping to build MicroCL
 | C#             | ⏳    | ⏳      |
 | Node (TS & JS) | ❌    | ❌      |
 | Java           | ❌    | ❌      |
+| Python           | ❌    | ❌      |
 
-## Go
+## Architecture
 
-Install Go library to host application
+## Libraries
 
-```bash
-
-go get github.com/trendyol/smurfs/
-
-```
+| Language       | Library | Host Example | Client Example | Docs |
+| -------------- | ---- | ------ | ----- | ----- |
+| Go             | [Source Code](https://github.com/Trendyol/smurfs/tree/main/go)    | [Host Example](https://github.com/Trendyol/smurfs/blob/main/examples/go/root.go)     | [Client Example](https://github.com/Trendyol/smurfs/blob/main/examples/go/micro_cli_1.go) | |
