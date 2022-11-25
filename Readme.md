@@ -1,6 +1,11 @@
-![https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg](https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg)
 
-# Smurfs (Preview)
+<p align="center">
+  <img src="https://github.com/Trendyol/smurfs/blob/main/docs/images/smurfs.jpeg?raw=true" alt="Smurfs"/>
+
+</p>
+
+<h1 align="center">Smurfs</h1>
+
 
 Easy way to build extensible CLI with Smurfs. Smurfs is helping to build MicroCLI Architecture
 
