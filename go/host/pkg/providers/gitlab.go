@@ -73,7 +73,7 @@ func (g *gitlabProvider) ResolveArchive(ctx context.Context, distribution models
 			for _, asset := range release.Assets.Links {
 				if asset.Name == distributionName {
 					return models.Archive{
-						URL:             asset.URL,
+						URL:             fmt.Sprintf("%s?private_token=%s", asset.URL, token),
 						SHA256:          "",
 						CanSkipDownload: false,
 					}, nil
