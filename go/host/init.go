@@ -1,6 +1,10 @@
 package host
 
 import (
+	"log"
+	"net"
+	"net/http"
+
 	"github.com/spf13/cobra"
 	"github.com/trendyol/smurfs/go/host/auth"
 	"github.com/trendyol/smurfs/go/host/logger"
@@ -16,9 +20,6 @@ import (
 	"github.com/trendyol/smurfs/go/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
-	"net/http"
 )
 
 type SmurfHost struct {

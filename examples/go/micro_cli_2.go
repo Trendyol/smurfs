@@ -7,10 +7,7 @@ import (
 )
 
 func main() {
-	host := "localhost:50051"
-	smurfs, err := client.InitializeClient(client.Options{
-		HostAddress: &host,
-	})
+	smurfs, err := client.InitializeClient(client.Options{})
 
 	if err != nil {
 		fmt.Println(err)

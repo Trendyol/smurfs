@@ -42,10 +42,11 @@ func (c *cliBuilder) Build(options *Options) *cobra.Command {
 		ctx := ContextWithCommandManifest(context.Background(), p)
 
 		subCommand := &cobra.Command{
-			Use:     p.Name,
-			Run:     c.commandWrapper.Wrap(p),
-			Short:   p.ShortDescription,
-			Example: p.Usage,
+			Use:                p.Name,
+			Run:                c.commandWrapper.Wrap(p),
+			Short:              p.ShortDescription,
+			Example:            p.Usage,
+			DisableFlagParsing: true,
 		}
 
 		subCommand.SetContext(ctx)

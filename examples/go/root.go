@@ -25,7 +25,7 @@ var plugins = []*plugin.Plugin{
 		Distributions: []models.Distribution{
 			{
 				Version:          "1.0.0",
-				Targets:          []string{"darwin_arm64"},
+				Targets:          []string{"darwin_arm64", "darwin_amd64", "linux_arm64", "linux_amd64", "windows_x64", "windows_x86"},
 				SkipVerification: true,
 				Executable: models.Executable{
 					Provider: "local",
@@ -127,16 +127,12 @@ func (m MetadataStorage) Set(key string, value string) error {
 }
 
 func main() {
-	logger := &Logger{}
 	hostAuth := &Auth{}
-	metadataStorage := &MetadataStorage{}
 	smurfHost, err := host.InitializeHost(&cli.Options{
-		Plugins:         plugins,
-		RootCmd:         rootCmd,
-		Logger:          logger,
-		Auth:            hostAuth,
-		MetadataStorage: metadataStorage,
-		PluginPath:      fmt.Sprintf("%s/.smurfs", pathutil.GetHomeDir()),
+		Plugins:    plugins,
+		RootCmd:    rootCmd,
+		Auth:       hostAuth,
+		PluginPath: fmt.Sprintf("%s/.smurfs", pathutil.GetHomeDir()),
 	})
 	if err != nil {
 		panic(err)

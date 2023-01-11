@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -38,8 +39,13 @@ func (d *fileDownloader) Download(ctx context.Context, uri, destinationFolder st
 	}
 	defer resp.Body.Close()
 
-	uriSegments := strings.Split(uri, "/")
-	filePath := path.Join(destinationFolder, uriSegments[len(uriSegments)-1])
+	parsedUrl, err := url.Parse(uri)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pathSegments := strings.Split(parsedUrl.Path, "/")
+	filePath := path.Join(destinationFolder, pathSegments[len(pathSegments)-1])
 
 	file, err := os.Create(filePath)
 	if err != nil {
