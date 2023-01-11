@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -163,7 +164,7 @@ func (m *manager) Uninstall(ctx context.Context, plugin Plugin) error {
 
 func (m *manager) moveArchiveContents(tempDir string, distribution models.Distribution, receipt Receipt) error {
 	pluginInstallPath := path.Join(m.paths.InstallPath(), receipt.Name, receipt.Executable.Version)
-	archivePath := path.Join(tempDir, fmt.Sprintf("%s-%s", receipt.Name, distribution.Targets[0]))
+	archivePath := path.Join(tempDir, fmt.Sprintf("%s-%s_%s", receipt.Name, runtime.GOOS, runtime.GOARCH))
 
 	if isDir, err := util.IsDirectory(pluginInstallPath); err != nil || !isDir {
 		if err := os.MkdirAll(pluginInstallPath, 0755); err != nil {
