@@ -36,7 +36,7 @@ func InitializeHost(options *cli.Options) (*SmurfHost, error) {
 	paths := environment.NewPaths(options.PluginPath)
 	httpClient := http.Client{}
 	providers.InitProviders(httpClient)
-	execManager := process.NewExec()
+	execManager := process.NewExec(&options.HostAddress)
 	extractor := archive.NewExtractorManager(map[string]archive.Extractor{
 		"application/zip":  archive.NewZipExtractor(),
 		"application/gzip": archive.NewTarGzExtractor(),
@@ -53,7 +53,7 @@ func InitializeHost(options *cli.Options) (*SmurfHost, error) {
 
 func buildDefaultOptions(options *cli.Options) {
 	if options.HostAddress == "" {
-		options.HostAddress = "localhost:50051"
+		options.HostAddress = ":"
 	}
 
 	if options.RootCmd == nil {
@@ -70,6 +70,8 @@ func Start(options *cli.Options, up chan struct{}) {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	options.HostAddress = lis.Addr().String()
 
 	if up != nil {
 		close(up)

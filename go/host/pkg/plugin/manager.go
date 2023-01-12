@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"github.com/trendyol/smurfs/go/host/pkg/providers"
 	"os"
 	"path"
 	"path/filepath"
@@ -165,6 +166,9 @@ func (m *manager) Uninstall(ctx context.Context, plugin Plugin) error {
 func (m *manager) moveArchiveContents(tempDir string, distribution models.Distribution, receipt Receipt) error {
 	pluginInstallPath := path.Join(m.paths.InstallPath(), receipt.Name, receipt.Executable.Version)
 	archivePath := path.Join(tempDir, fmt.Sprintf("%s-%s_%s", receipt.Name, runtime.GOOS, runtime.GOARCH))
+	if distribution.Executable.Provider == providers.LocalExecutableProvider {
+		archivePath = path.Join(tempDir, receipt.Name)
+	}
 
 	if isDir, err := util.IsDirectory(pluginInstallPath); err != nil || !isDir {
 		if err := os.MkdirAll(pluginInstallPath, 0755); err != nil {

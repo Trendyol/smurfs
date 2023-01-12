@@ -21,16 +21,17 @@ type SmurfClient struct {
 }
 
 type Options struct {
-	HostAddress *string
+	HostAddress string
 }
 
 func InitializeClient(opt Options) (*SmurfClient, error) {
-	if opt.HostAddress == nil {
-		flag.StringVar(opt.HostAddress, "host", "localhost:50051", "host address")
+	if opt.HostAddress == "" {
+		flag.StringVar(&opt.HostAddress, "smurf-host-address", "localhost:50051", "host address")
+		flag.Parse()
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 
-	dial, err := grpc.Dial(*opt.HostAddress, grpc.WithBlock(), grpc.WithTimeout(10*time.Second), grpc.WithInsecure())
+	dial, err := grpc.Dial(opt.HostAddress, grpc.WithBlock(), grpc.WithTimeout(10*time.Second), grpc.WithInsecure())
 	if err != nil {
 		log.Printf("failed to dial: %+v", err)
 		return nil, err

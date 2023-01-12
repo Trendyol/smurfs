@@ -14,16 +14,24 @@ type Executor interface {
 	Run(ctx context.Context, receipt *plugin.Receipt, args ...string) error
 }
 
-type executor struct{}
+type executor struct {
+	hostAddress *string
+}
 
-func NewExec() Executor {
-	return &executor{}
+func NewExec(hostAddress *string) Executor {
+	return &executor{
+		hostAddress: hostAddress,
+	}
 }
 
 func (e *executor) Run(ctx context.Context, receipt *plugin.Receipt, args ...string) error {
 	executablePath := receipt.Executable.Executable.Entrypoint
 
-	cmd := exec.CommandContext(ctx, executablePath, args...)
+	hostArgs := []string{
+		"--smurf-host-address", *e.hostAddress,
+	}
+
+	cmd := exec.CommandContext(ctx, executablePath, append(args, hostArgs...)...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
