@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"flag"
+	"github.com/trendyol/smurfs/go/client/pkg"
 	"github.com/trendyol/smurfs/go/client/pkg/service"
 	"google.golang.org/grpc"
 	"log"
@@ -26,9 +26,14 @@ type Options struct {
 
 func InitializeClient(opt Options) (*SmurfClient, error) {
 	if opt.HostAddress == "" {
-		flag.StringVar(&opt.HostAddress, "smurf-host-address", "localhost:50051", "host address")
-		flag.Parse()
+		value, err := pkg.ParseSpecificFlagString("smurf-host-address")
+		opt.HostAddress = value
+
+		if err != nil {
+			opt.HostAddress = "localhost:50051"
+		}
 	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	dial, err := grpc.Dial(opt.HostAddress, grpc.WithBlock(), grpc.WithTimeout(10*time.Second), grpc.WithInsecure())
