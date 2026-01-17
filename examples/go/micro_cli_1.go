@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/trendyol/smurfs/go/client"
 	"log"
+
+	"github.com/trendyol/smurfs/go/client"
 )
 
 func main() {
 	fmt.Println("Starting micro1")
 	host := "localhost:50051"
 	smurfs, err := client.InitializeClient(client.Options{
-		HostAddress: &host,
+		HostAddress: host,
 	})
 	if err != nil {
 		fmt.Println(err)
