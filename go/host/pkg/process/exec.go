@@ -2,7 +2,6 @@ package process
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -36,7 +35,5 @@ func (e *executor) Run(ctx context.Context, receipt *plugin.Receipt, args ...str
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	err := cmd.Run()
-	fmt.Println(err)
-	return err
+	return cmd.Run()
 }

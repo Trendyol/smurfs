@@ -1,11 +1,12 @@
 package plugin
 
 import (
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/trendyol/smurfs/go/host/pkg/models"
 	"github.com/trendyol/smurfs/go/host/pkg/util"
 	"k8s.io/utils/strings/slices"
-	"time"
 )
 
 var (
@@ -23,7 +24,7 @@ type Plugin struct {
 		Name        string `yaml:"name"`
 		Short       string `yaml:"short"`
 		Description string `yaml:"description"`
-		Repeated    bool   `yaml:"required"`
+		Repeated    bool   `yaml:"repeated"`
 		Required    bool   `yaml:"required"`
 	}
 }

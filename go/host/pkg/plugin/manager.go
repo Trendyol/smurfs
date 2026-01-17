@@ -3,11 +3,12 @@ package plugin
 import (
 	"context"
 	"fmt"
-	"github.com/trendyol/smurfs/go/host/pkg/providers"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
+
+	"github.com/trendyol/smurfs/go/host/pkg/providers"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -177,7 +178,7 @@ func (m *manager) moveArchiveContents(tempDir string, distribution models.Distri
 	}
 
 	if isDir, err := util.IsDirectory(archivePath); err == nil && !isDir {
-		_, err := m.moveFile(archivePath, receipt, pluginInstallPath, err)
+		_, err := m.moveFile(archivePath, receipt, pluginInstallPath)
 		if err != nil {
 			return err
 		}
@@ -191,7 +192,7 @@ func (m *manager) moveArchiveContents(tempDir string, distribution models.Distri
 	}
 
 	for _, archiveContent := range archiveContents {
-		done, err := m.moveDir(archivePath, receipt, archiveContent, pluginInstallPath, err)
+		done, err := m.moveDir(archivePath, receipt, archiveContent, pluginInstallPath)
 		if done {
 			return err
 		}
@@ -200,20 +201,20 @@ func (m *manager) moveArchiveContents(tempDir string, distribution models.Distri
 	return nil
 }
 
-func (m *manager) moveDir(archivePath string, receipt Receipt, archiveContent os.DirEntry, pluginInstallPath string, err error) (bool, error) {
+func (m *manager) moveDir(archivePath string, receipt Receipt, archiveContent os.DirEntry, pluginInstallPath string) (bool, error) {
 	name := archiveContent.Name()
 	sourcePath := path.Join(archivePath, name)
 	destinationPath := path.Join(pluginInstallPath, name)
-	if err = os.Rename(sourcePath, destinationPath); err != nil {
+	if err := os.Rename(sourcePath, destinationPath); err != nil {
 		return true, errors.Wrapf(err, "could not move file %q for plugin %q", name, receipt.Name)
 	}
 	return false, nil
 }
 
-func (m *manager) moveFile(archivePath string, receipt Receipt, installPath string, err error) (bool, error) {
+func (m *manager) moveFile(archivePath string, receipt Receipt, installPath string) (bool, error) {
 	name := filepath.Base(archivePath)
 	destinationPath := path.Join(installPath, receipt.Name)
-	if err = os.Rename(archivePath, destinationPath); err != nil {
+	if err := os.Rename(archivePath, destinationPath); err != nil {
 		return false, errors.Wrapf(err, "could not move file %q for plugin %q", name, receipt.Name)
 	}
 	return true, nil

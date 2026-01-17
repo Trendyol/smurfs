@@ -2,15 +2,17 @@ package client
 
 import (
 	"context"
-	"github.com/trendyol/smurfs/go/client/pkg"
-	"github.com/trendyol/smurfs/go/client/pkg/service"
-	"google.golang.org/grpc"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/trendyol/smurfs/go/client/pkg"
+	"github.com/trendyol/smurfs/go/client/pkg/service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type SmurfClient struct {
@@ -36,7 +38,7 @@ func InitializeClient(opt Options) (*SmurfClient, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	dial, err := grpc.Dial(opt.HostAddress, grpc.WithBlock(), grpc.WithTimeout(10*time.Second), grpc.WithInsecure())
+	dial, err := grpc.NewClient(opt.HostAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("failed to dial: %+v", err)
 		return nil, err
